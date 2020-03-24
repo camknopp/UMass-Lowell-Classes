@@ -1,6 +1,8 @@
 # Base game code from tutorial at https://www.youtube.com/watch?v=XpYz-q1lxu8&t=812s
+# Used this video for help on setting up the OpenAI environment https://www.youtube.com/watch?v=w1jd0Dpbc2o&t=8s and training loop
 
 import numpy as np
+import matplotlib.pyplot as plt
 import math
 import time
 import random
@@ -209,11 +211,6 @@ def expectimax(board, depth, maximizingPlayer):
         return column, (total/len(valid_locations))
 
 
-def Q_learning(board):
-    pass
-    
-
-
 def get_valid_locations(board):
     valid_locations = []
     for col in range(COLUMN_COUNT):
@@ -240,47 +237,106 @@ def choose_best_move(board, piece):
     return best_col
 
 
-board = create_board()
-game_over = False
-turn = 0
+def max_action(Q, state, actions):
+    print(Q)
+    
+    values = np.array([Q[state, a] for a in actions])
+    action = np.argmax(values)
+    return max(val) #actions[actions]
 
-while not game_over:
 
-    col = None
-    # Player's turn
-    if turn == 0:
-        # while (col is None or col > 7 or col < 1 or not is_valid_location(board, col-1)):
-        # col = int(input("Player 1 Make your Selection (1-7): "))
-        col, score = minimax(board, 4, True)
-        time.sleep(.25)
-        print("minimax chooses column {}".format(col))
+def Q_learning(board):
+    env = gym.make('connect4-v0')  # create gym environment for training agent
+    alpha = 0.1
+    gamma = 1.0
+    epsilon = 1.0
 
-        if is_valid_location(board, col):
-            row = get_next_open_row(board, col)
-            drop_piece(board, row, col, 1)
+    Q = {}
+    for state in range(ROW_COUNT * COLUMN_COUNT):
+        for action in range(7):
+            Q[state, action] = 0
 
-            if winning_move(board, 1):
-                print_board(board)
-                print("minimax wins!")
-                game_over = True
-                break
+    num_games = 50000
+    total_rewards = np.zeros(num_games)
 
-    # ai's turn
-    else:
-        #col, score = minimax(board, 4, True)
-        col, score = expectimax(board, 4, True)
-        time.sleep(.25)
-        print("expectimax chooses column {}".format(col))
+    for i in range(num_games):
+        if i % 5000 == 0:
+            print('starting game {}'.format(i))
 
-        if is_valid_location(board, col):
-            row = get_next_open_row(board, col)
-            drop_piece(board, row, col, 2)
+        done = False
+        epRewards = 0
+        observation = env.reset()
 
-            if winning_move(board, 2):
-                print_board(board)
-                print("expectimax wins!")
-                game_over = True
-                break
-    print("-----------")
-    print_board(board)
-    turn = (turn+1) % 2
+        while not done:
+            rand = np.random.random()
+            if rand < (1-epsilon):
+                action = max_action(
+                    Q, observation, get_valid_locations(observation))
+            else:
+                action = np.random.choice(get_valid_locations(observation))
+
+            observation_, reward, done, info = env.step(action)
+            epRewards += reward
+            action_ = max_action(
+                Q, observation_, get_valid_locations(observation_))
+            Q[observation, action] = Q[observation, action] + alpha*(reward +
+                                                                     gamma*Q[observation_, action_] - Q[observation, action])
+            observation = observation_ # update observation
+
+        if epsilon - 2 / num_games > 0:
+            epsilon -= 2 / num_games
+        else:
+            epsilon = 0
+        total_rewards[i] = epRewards
+    plt.plot(total_rewards)
+    plt.show()
+
+
+if __name__ == '__main__':
+
+    board = create_board()
+    Q_learning(board)
+    game_over = False
+    turn = 0
+"""
+    while not game_over:
+
+        col = None
+        # Player's turn
+        if turn == 0:
+            # while (col is None or col > 7 or col < 1 or not is_valid_location(board, col-1)):
+            # col = int(input("Player 1 Make your Selection (1-7): "))
+            col, score = minimax(board, 4, True)
+            time.sleep(.25)
+            print("minimax chooses column {}".format(col))
+
+            if is_valid_location(board, col):
+                row = get_next_open_row(board, col)
+                drop_piece(board, row, col, 1)
+
+                if winning_move(board, 1):
+                    print_board(board)
+                    print("minimax wins!")
+                    game_over = True
+                    break
+
+        # ai's turn
+        else:
+            #col, score = minimax(board, 4, True)
+            col, score = expectimax(board, 4, True)
+            time.sleep(.25)
+            print("expectimax chooses column {}".format(col))
+
+            if is_valid_location(board, col):
+                row = get_next_open_row(board, col)
+                drop_piece(board, row, col, 2)
+
+                if winning_move(board, 2):
+                    print_board(board)
+                    print("expectimax wins!")
+                    game_over = True
+                    break
+        print("-----------")
+        print_board(board)
+        turn = (turn+1) % 2
+        """
