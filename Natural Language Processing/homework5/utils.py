@@ -30,11 +30,15 @@ def pad_sents(sents, pad_token):
         than the max length sentence are padded out with the pad_token, such that
         each sentences in the batch now has equal length.
     """
-    sents_padded = []
+    sents_padded = sents.copy()
 
     ### YOUR CODE HERE (~6 Lines)
+    longest_sent = max(sents, key=len) # get longest sentence
 
-
+    for sent in sents_padded:
+        if len(sent) < len(longest_sent): # need to pad sentence if not max length
+            for i in range(len(sent), len(longest_sent) - 1):
+                sent.append(pad_token)  # pad given sentence to max length
 
     ### END YOUR CODE
 
