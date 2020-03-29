@@ -1,6 +1,8 @@
 """
 Policy Gradient Reinforcement Learning
 Uses a 3 layer neural network as the policy network
+
+Code from https://github.com/gabrielgarza/openai-gym-policy-gradient/blob/master/policy_gradient_layers.py
 """
 import tensorflow as tf
 import numpy as np
