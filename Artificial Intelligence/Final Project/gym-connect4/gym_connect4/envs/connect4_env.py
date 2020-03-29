@@ -10,7 +10,7 @@ class connect4(gym.Env):
   #create board, initialize any variables that are needed in order to keep track of the state
   def __init__(self):
     print("init success")
-    self.possibleActions = [0, 1, 2, 3, 4, 5, 6]
+    self.action_space = [0, 1, 2, 3, 4, 5, 6]
     self.row_count = 6
     self.col_count = 7
     self.board = np.zeros((self.row_count, self.col_count))
