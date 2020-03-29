@@ -134,7 +134,16 @@ class NMT(nn.Module):
         @returns dec_init_state (tuple(Tensor, Tensor)): Tuple of tensors representing the decoder's initial
                                                 hidden state and cell.
         """
-        enc_hiddens, dec_init_state = None, None
+        
+        X = torch.Tensor(source_padded.size()[0], source_padded.size()[1], self.model_embeddings.embed_size)
+        X = pack_padded_sequence(X, source_lengths)
+        enc_hiddens, last_hidden, last_cell = self.encoder(X)
+        enc_hiddens = pack_padded_sequence(enc_hiddens, source_lengths)
+        # need to reshape enc_hiddens 
+        
+
+
+        enc_hiddens, dec_init_state = self.encoder(source_padded), 
 
         ### YOUR CODE HERE (~ 8 Lines)
         ### TODO:
