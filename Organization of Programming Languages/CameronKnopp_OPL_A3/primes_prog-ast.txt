@@ -1,0 +1,23 @@
+[AST_read "n"; AST_assign ("cp", AST_num "2");
+ AST_do
+  [AST_check (AST_binop (">", AST_id "n", AST_num "0"));
+   AST_assign ("found", AST_num "0"); AST_assign ("cf1", AST_num "2");
+   AST_assign ("cf1s", AST_binop ("*", AST_id "cf1", AST_id "cf1"));
+   AST_do
+    [AST_check (AST_binop ("<=", AST_id "cf1s", AST_id "cp"));
+     AST_assign ("cf2", AST_num "2");
+     AST_assign ("pr", AST_binop ("*", AST_id "cf1", AST_id "cf2"));
+     AST_do
+      [AST_check (AST_binop ("<=", AST_id "pr", AST_id "cp"));
+       AST_if
+        (AST_binop ("==", AST_id "pr", AST_id "cp"),
+         [AST_assign ("found", AST_num "1")]);
+       AST_assign ("cf2", AST_binop ("+", AST_id "cf2", AST_num "1"));
+       AST_assign ("pr", AST_binop ("*", AST_id "cf1", AST_id "cf2"))];
+     AST_assign ("cf1", AST_binop ("+", AST_id "cf1", AST_num "1"));
+     AST_assign ("cf1s", AST_binop ("*", AST_id "cf1", AST_id "cf1"))];
+   AST_if
+    (AST_binop ("==", AST_id "found", AST_num "0"),
+     [AST_write (AST_id "cp");
+      AST_assign ("n", AST_binop ("-", AST_id "n", AST_num "1"))]);
+   AST_assign ("cp", AST_binop ("+", AST_id "cp", AST_num "1"))]]

@@ -1,0 +1,8 @@
+
+AST_sl [
+  AST_read("a");
+  AST_read("b");
+  AST_assign("sum", AST_binop("+", AST_id "a", AST_id "b"));
+  AST_write(AST_id "sum");
+  AST_write(AST_binop("/", AST_id "sum", AST_num "2"))
+]
