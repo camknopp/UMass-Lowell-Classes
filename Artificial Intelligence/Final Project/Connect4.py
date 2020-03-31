@@ -8,7 +8,8 @@ import time
 import random
 import arcade
 import gym
-import gym_connect4
+#import gym_connect4
+import pygame
 
 ROW_COUNT = 6
 COLUMN_COUNT = 7
@@ -304,32 +305,42 @@ if __name__ == '__main__':
     ROW_SPACING = 50
     LEFT_MARGIN = 250
     BOTTOM_MARGIN = 250
+    WHITE = (255,255,255)
+
 
     # Open the window and set the background
-    arcade.open_window(800, 800, "Connect 4")
+    #arcade.open_window(800, 800, "Connect 4")
+    pygame.init()
+    screen = pygame.display.set_mode((800, 800))
+    screen.fill(WHITE)
+    done = False
 
-    arcade.set_background_color(arcade.color.WHITE)
+   # arcade.set_background_color(arcade.color.WHITE)
 
     # Start the render process. This must be done before any drawing commands.
-    arcade.start_render()
+   #  arcade.start_render()
+    while not done:
+        for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                            done = True
+        # Loop for each row
+        for row in range(6):
+            # Loop for each column
+            for column in range(7):
+                # Calculate our location
+                x = column * COLUMN_SPACING + LEFT_MARGIN
+                y = row * ROW_SPACING + BOTTOM_MARGIN
 
-    # Loop for each row
-    for row in range(6):
-        # Loop for each column
-        for column in range(7):
-            # Calculate our location
-            x = column * COLUMN_SPACING + LEFT_MARGIN
-            y = row * ROW_SPACING + BOTTOM_MARGIN
+                # Draw the item
+                
+                pygame.draw.circle(screen, (255,232,255), (x,y), 10, 1)
+        pygame.display.flip()
+        #time.sleep(.5)
 
-            # Draw the item
-            arcade.draw_circle_filled(x, y, 10, arcade.color.AO)
+    """
+    each time a move is made, render the board
 
-    # Finish the render.
-    arcade.finish_render()
-
-    # Keep the window up until someone closes it.
-    arcade.run()
-    # Keep the win
+    """
 
     """
     while expectimax_wins != 100 or minimax_wins != 100:
