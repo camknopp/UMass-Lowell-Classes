@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import math
 import time
 import random
+import arcade
 import gym
 import gym_connect4
 
@@ -246,6 +247,8 @@ def max_action(Q, state, actions):
 
 
 def Q_learning(board):
+    pass
+    """
     env = gym.make('connect4-v0')  # create gym environment for training agent
     alpha = 0.1
     gamma = 1.0
@@ -290,53 +293,114 @@ def Q_learning(board):
         total_rewards[i] = epRewards
     plt.plot(total_rewards)
     plt.show()
-
+"""
 
 if __name__ == '__main__':
+    
+    expectimax_wins = 0
+    minimax_wins = 0
 
-    board = create_board()
-    Q_learning(board)
-    game_over = False
-    turn = 0
+    COLUMN_SPACING = 50
+    ROW_SPACING = 50
+    LEFT_MARGIN = 250
+    BOTTOM_MARGIN = 250
+
+    # Open the window and set the background
+    arcade.open_window(800, 800, "Connect 4")
+
+    arcade.set_background_color(arcade.color.WHITE)
+
+    # Start the render process. This must be done before any drawing commands.
+    arcade.start_render()
+
+    # Loop for each row
+    for row in range(6):
+        # Loop for each column
+        for column in range(7):
+            # Calculate our location
+            x = column * COLUMN_SPACING + LEFT_MARGIN
+            y = row * ROW_SPACING + BOTTOM_MARGIN
+
+            # Draw the item
+            arcade.draw_circle_filled(x, y, 10, arcade.color.AO)
+
+    # Finish the render.
+    arcade.finish_render()
+
+    # Keep the window up until someone closes it.
+    arcade.run()
+    # Keep the win
+
+    """
+    while expectimax_wins != 100 or minimax_wins != 100:
+        board = create_board()
+        #Q_learning(board)
+        game_over = False
+        turn = 0
+        turn_num = 0
+        while not game_over:
+            col = None
+            # Player's turn
+            if len(get_valid_locations(board)) == 0:
+                game_over = True
+                print("Tie game")
+                break
+
+            if turn == 0:
+                if turn_num == 0 or turn_num == 1: # if first or second turn, then drop random piece in order to spice up the game
+                    col = random.choice(get_valid_locations(board))
+                    print("Randomly placing a chip...")
+                    row = get_next_open_row(board, col)
+                    drop_piece(board, row, col, 1)
+                    turn_num+=1
+                else:
+                    # while (col is None or col > 7 or col < 1 or not is_valid_location(board, col-1)):
+                    # col = int(input("Player 1 Make your Selection (1-7): "))
+                    col, score = minimax(board, 4, True)
+                    print("minimax chooses column {}".format(col))
+
+                    if is_valid_location(board, col):
+                        row = get_next_open_row(board, col)
+                        drop_piece(board, row, col, 1)
+
+                        if winning_move(board, 1):
+                            print_board(board)
+                            print("minimax wins!")
+                            minimax_wins+=1
+                            print("total minimax wins: {}".format(minimax_wins))
+                            game_over = True
+                            break
+
+            # ai's turn
+            else:
+                if turn_num == 0 or turn_num == 1: # if first or second turn, then drop random piece in order to spice up the game
+                    col = random.choice(get_valid_locations(board))
+                    print("Randomly placing a chip...")
+                    row = get_next_open_row(board, col)
+                    drop_piece(board, row, col, 2)
+                    turn_num+=1
+                else:
+                    #col, score = minimax(board, 4, True)
+                    col, score = expectimax(board, 4, True)
+                    print("expectimax chooses column {}".format(col))
+                
+                    if is_valid_location(board, col):
+                        row = get_next_open_row(board, col)
+                        drop_piece(board, row, col, 2)
+
+                        if winning_move(board, 2):
+                            print_board(board)
+                            print("expectimax wins!")
+                            expectimax_wins+=1
+                            print("total expectimax wins: {}".format(expectimax_wins))
+                            game_over = True
+                            break
+            #print("-----------")
+            #print_board(board)
+            #time.sleep(.25)
+            turn = (turn+1) % 2
+    
+    print("minimax wins: {}".format(minimax_wins))
+    print("expectimax wins: {}".format(expectimax_wins))
+    
 """
-    while not game_over:
-
-        col = None
-        # Player's turn
-        if turn == 0:
-            # while (col is None or col > 7 or col < 1 or not is_valid_location(board, col-1)):
-            # col = int(input("Player 1 Make your Selection (1-7): "))
-            col, score = minimax(board, 4, True)
-            time.sleep(.25)
-            print("minimax chooses column {}".format(col))
-
-            if is_valid_location(board, col):
-                row = get_next_open_row(board, col)
-                drop_piece(board, row, col, 1)
-
-                if winning_move(board, 1):
-                    print_board(board)
-                    print("minimax wins!")
-                    game_over = True
-                    break
-
-        # ai's turn
-        else:
-            #col, score = minimax(board, 4, True)
-            col, score = expectimax(board, 4, True)
-            time.sleep(.25)
-            print("expectimax chooses column {}".format(col))
-
-            if is_valid_location(board, col):
-                row = get_next_open_row(board, col)
-                drop_piece(board, row, col, 2)
-
-                if winning_move(board, 2):
-                    print_board(board)
-                    print("expectimax wins!")
-                    game_over = True
-                    break
-        print("-----------")
-        print_board(board)
-        turn = (turn+1) % 2
-        """
