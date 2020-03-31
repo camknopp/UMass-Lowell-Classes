@@ -296,6 +296,22 @@ def Q_learning(board):
     plt.show()
 """
 
+def display_board(board, screen):
+    for row in range(6):
+            # Loop for each column
+        for column in range(7):
+            # Calculate our location
+            x = column * COLUMN_SPACING + LEFT_MARGIN
+            #y = row * ROW_SPACING + BOTTOM_MARGIN
+            y = TOP_MARGIN - row * ROW_SPACING 
+
+            if board[row][column] == 1:
+                pygame.display.update(pygame.draw.circle(screen, (255,0,0), (x,y), 10, 0))
+            elif board[row][column] == 2:
+                pygame.display.update(pygame.draw.circle(screen, (255,255,0), (x,y), 10, 0))
+        
+
+
 if __name__ == '__main__':
     
     expectimax_wins = 0
@@ -305,47 +321,40 @@ if __name__ == '__main__':
     ROW_SPACING = 50
     LEFT_MARGIN = 250
     BOTTOM_MARGIN = 250
+    TOP_MARGIN = 750
     BLACK = (0,0,0)
+    WHITE = (255,255,255)
+    EGGSHELL = (240,234,214)
 
 
     # Open the window and set the background
-    #arcade.open_window(800, 800, "Connect 4")
     pygame.init()
     screen = pygame.display.set_mode((800, 800))
-    screen.fill(BLACK)
-    done = False
+    screen.fill(EGGSHELL)
 
-   # arcade.set_background_color(arcade.color.WHITE)
+    for row in range(6):
+        # Loop for each column
+        for column in range(7):
+            # Calculate our location
+            x = column * COLUMN_SPACING + LEFT_MARGIN
+            #y = row * ROW_SPACING + BOTTOM_MARGIN
+            y = TOP_MARGIN - row * ROW_SPACING 
 
-    # Start the render process. This must be done before any drawing commands.
-   #  arcade.start_render()
-   
+            pygame.draw.circle(screen, (255,255,255), (x,y), 10, 3)
 
+    pygame.display.update()
 
     
     while expectimax_wins != 100 or minimax_wins != 100:
         board = create_board()
+        
         #Q_learning(board)
         game_over = False
         turn = 0
-        turn_num = 0
-        
-       
+        turn_num = 0   
 
         while not game_over:
-
-            for row in range(6):
-                # Loop for each column
-                for column in range(7):
-                    # Calculate our location
-                    x = column * COLUMN_SPACING + LEFT_MARGIN
-                    y = row * ROW_SPACING + BOTTOM_MARGIN
-
-                    # Draw the item
-                    
-                    pygame.draw.circle(screen, (255,255,255), (x,y), 10, 1)
-            pygame.display.flip()
-
+            
             col = None
             # Player's turn
             if len(get_valid_locations(board)) == 0:
@@ -404,23 +413,15 @@ if __name__ == '__main__':
                             game_over = True
                             break
             #print("-----------")
-           # print_board(board)
+            print_board(board)
             #time.sleep(.25)
-            for row in range(6):
-                 # Loop for each column
-                for column in range(7):
-                    # Calculate our location
-                    x = column * COLUMN_SPACING + LEFT_MARGIN
-                    y = row * ROW_SPACING + BOTTOM_MARGIN
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
 
-                    if board[row][col] == 1:
-                        pygame.draw.circle(screen, (255,0,0), (x,y), 10, 1)
-                    elif board[row][col] == 2:
-                        pygame.draw.circle(screen, (255,255,0), (x,y), 10, 1)
-                    else:
-                        pygame.draw.circle(screen, (255,255,255), (x,y), 10, 1)
-
-            pygame.display.flip()
+            display_board(board, screen)
+            pygame.display.update()
+            time.sleep(1)
             turn = (turn+1) % 2
     
     print("minimax wins: {}".format(minimax_wins))
