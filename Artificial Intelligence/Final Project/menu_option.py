@@ -19,7 +19,7 @@ class Option:
         self.screen.blit(self.rend, self.rect)
         
     def set_rend(self):
-        font = pygame.font.Font(None, 40)
+        font = pygame.font.Font(None, 50)
         self.rend = font.render(self.text, True, self.get_color())
         
     def get_color(self):
@@ -31,4 +31,5 @@ class Option:
     def set_rect(self):
         self.set_rend()
         self.rect = self.rend.get_rect()
-        self.rect.topleft = self.pos
+        #self.rect.topleft = self.pos
+        self.rect.center = self.pos
