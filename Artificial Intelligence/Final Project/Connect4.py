@@ -10,9 +10,18 @@ import arcade
 import gym
 #import gym_connect4
 import pygame
+from menu_option import Option
 
 ROW_COUNT = 6
 COLUMN_COUNT = 7
+COLUMN_SPACING = 50
+ROW_SPACING = 50
+LEFT_MARGIN = 250
+BOTTOM_MARGIN = 250
+TOP_MARGIN = 750
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+EGGSHELL = (240, 234, 214)
 
 
 def create_board():
@@ -241,10 +250,10 @@ def choose_best_move(board, piece):
 
 def max_action(Q, state, actions):
     print(Q)
-    
+
     values = np.array([Q[state, a] for a in actions])
     action = np.argmax(values)
-    return max(val) #actions[actions]
+    return max(val)  # actions[actions]
 
 
 def Q_learning(board):
@@ -296,80 +305,118 @@ def Q_learning(board):
     plt.show()
 """
 
-def display_board(board, screen):
-    for row in range(6):
-            # Loop for each column
-        for column in range(7):
-            # Calculate our location
-            x = column * COLUMN_SPACING + LEFT_MARGIN
-            #y = row * ROW_SPACING + BOTTOM_MARGIN
-            y = TOP_MARGIN - row * ROW_SPACING 
 
-            if board[row][column] == 1:
-                pygame.display.update(pygame.draw.circle(screen, (255,0,0), (x,y), 10, 0))
-            elif board[row][column] == 2:
-                pygame.display.update(pygame.draw.circle(screen, (255,255,0), (x,y), 10, 0))
-        
+def draw_piece(screen, row, col, piece):
+    if piece == 1:
+        color = (255, 0, 0)
+    else:
+        color = (255, 255, 0)
+
+    x = col * COLUMN_SPACING + LEFT_MARGIN
+    y = TOP_MARGIN - row * ROW_SPACING
+    pygame.display.update(pygame.draw.circle(screen, color, (x, y), 10, 0))
 
 
-if __name__ == '__main__':
-    
-    expectimax_wins = 0
-    minimax_wins = 0
-
-    COLUMN_SPACING = 50
-    ROW_SPACING = 50
-    LEFT_MARGIN = 250
-    BOTTOM_MARGIN = 250
-    TOP_MARGIN = 750
-    BLACK = (0,0,0)
-    WHITE = (255,255,255)
-    EGGSHELL = (240,234,214)
-
-
-    # Open the window and set the background
-    pygame.init()
-    screen = pygame.display.set_mode((800, 800))
-    screen.fill(EGGSHELL)
-
+def draw_board(board, screen):
     for row in range(6):
         # Loop for each column
         for column in range(7):
             # Calculate our location
             x = column * COLUMN_SPACING + LEFT_MARGIN
             #y = row * ROW_SPACING + BOTTOM_MARGIN
-            y = TOP_MARGIN - row * ROW_SPACING 
+            y = TOP_MARGIN - row * ROW_SPACING
 
-            pygame.draw.circle(screen, (255,255,255), (x,y), 10, 3)
-
+            pygame.draw.circle(screen, (255, 255, 255), (x, y), 10, 3)
     pygame.display.update()
 
-    
+
+def game_with_graphics():
+    pass
+
+
+def draw_menu(screen):
+    options = [Option("Start Game", (300, 400), screen)]
+    chosen_option = False
+
+    while chosen_option == False:
+        #for event in pygame.event.get():
+        pygame.event.pump()
+
+        for option in options:
+            if option.rect.collidepoint(pygame.mouse.get_pos()):
+                option.hovered = True
+            else:
+                option.hovered = False
+            option.draw()
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONUP and option.hovered == True:
+                    chosen_option = True
+                    pygame.quit()
+                elif event.type == pygame.QUIT:
+                    pygame.quit()
+                else:
+                    pass
+                
+        
+        
+        pygame.display.update()
+
+
+def display_wins(screen, player_one_wins, player_two_wins, ties, names):
+    font = pygame.font.SysFont('Comic Sans MS', 25)
+    p1_wins = font.render(
+        names[0] + ": "+str(player_one_wins), True, (0, 0, 0))
+    screen.blit(p1_wins, (0, 0))
+
+    p2_wins = font.render(
+        names[1] + ": "+str(player_two_wins), True, (0, 0, 0))
+    screen.blit(p2_wins, (150, 0))
+
+    ties = font.render("Ties: "+str(ties), True, (0, 0, 0))
+    screen.blit(ties, (350, 0))
+
+
+if __name__ == '__main__':
+
+    expectimax_wins = 0
+    minimax_wins = 0
+    tie_games = 0
+    names = ['Expectimax', 'Minimax']
+
+    # Open the window and set the background
+    pygame.init()
+    screen = pygame.display.set_mode((800, 800))
+    screen.fill(EGGSHELL)
+    draw_menu(screen)
+
     while expectimax_wins != 100 or minimax_wins != 100:
         board = create_board()
-        
-        #Q_learning(board)
+        # Q_learning(board)
         game_over = False
         turn = 0
-        turn_num = 0   
+        turn_num = 0
+        screen.fill(EGGSHELL)
+        display_wins(screen, minimax_wins, expectimax_wins, tie_games, names)
+        draw_board(board, screen)
 
         while not game_over:
-            
             col = None
             # Player's turn
             if len(get_valid_locations(board)) == 0:
                 game_over = True
                 print("Tie game")
+                tie_games += 1
                 break
 
             if turn == 0:
-                if turn_num == 0 or turn_num == 1: # if first or second turn, then drop random piece in order to spice up the game
+                if turn_num == 0 or turn_num == 1:  # if first or second turn, then drop random piece in order to spice up the game
                     col = random.choice(get_valid_locations(board))
                     print("Randomly placing a chip...")
                     row = get_next_open_row(board, col)
                     drop_piece(board, row, col, 1)
+                    draw_piece(screen, row, col, 1)
 
-                    turn_num+=1
+                    turn_num += 1
                 else:
                     # while (col is None or col > 7 or col < 1 or not is_valid_location(board, col-1)):
                     # col = int(input("Player 1 Make your Selection (1-7): "))
@@ -379,51 +426,59 @@ if __name__ == '__main__':
                     if is_valid_location(board, col):
                         row = get_next_open_row(board, col)
                         drop_piece(board, row, col, 1)
+                        draw_piece(screen, row, col, 1)
 
                         if winning_move(board, 1):
                             print_board(board)
                             print("minimax wins!")
-                            minimax_wins+=1
+                            minimax_wins += 1
                             print("total minimax wins: {}".format(minimax_wins))
                             game_over = True
                             break
 
             # ai's turn
             else:
-                if turn_num == 0 or turn_num == 1: # if first or second turn, then drop random piece in order to spice up the game
+                if turn_num == 0 or turn_num == 1:  # if first or second turn, then drop random piece in order to spice up the game
                     col = random.choice(get_valid_locations(board))
                     print("Randomly placing a chip...")
                     row = get_next_open_row(board, col)
                     drop_piece(board, row, col, 2)
-                    turn_num+=1
+                    draw_piece(screen, row, col, 2)
+
+                    turn_num += 1
                 else:
                     #col, score = minimax(board, 4, True)
                     col, score = expectimax(board, 4, True)
                     print("expectimax chooses column {}".format(col))
-                
+
                     if is_valid_location(board, col):
                         row = get_next_open_row(board, col)
                         drop_piece(board, row, col, 2)
+                        draw_piece(screen, row, col, 2)
 
                         if winning_move(board, 2):
                             print_board(board)
                             print("expectimax wins!")
-                            expectimax_wins+=1
-                            print("total expectimax wins: {}".format(expectimax_wins))
+                            expectimax_wins += 1
+                            print("total expectimax wins: {}".format(
+                                expectimax_wins))
+
                             game_over = True
                             break
-            #print("-----------")
-            print_board(board)
-            #time.sleep(.25)
+            print("-----------")
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
 
-            display_board(board, screen)
-            pygame.display.update()
-            time.sleep(1)
+            time.sleep(.75)
+            #draw_board(board, screen)
+            print_board(board)
+
             turn = (turn+1) % 2
-    
+
+        screen.fill(EGGSHELL)
+        draw_board(board, screen)
+
     print("minimax wins: {}".format(minimax_wins))
     print("expectimax wins: {}".format(expectimax_wins))
-    
