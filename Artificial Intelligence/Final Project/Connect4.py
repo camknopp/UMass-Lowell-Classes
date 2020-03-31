@@ -335,7 +335,7 @@ def game_with_graphics():
 
 
 def draw_menu(screen):
-    options = [Option("Start Game", (300, 400), screen)]
+    options = [Option("Start Game", (400, 350), screen), Option("Quit", (400, 600), screen) , Option("<", (200, 475), screen), Option(">", (400, 475), screen) ]
     chosen_option = False
 
     while chosen_option == False:
@@ -348,6 +348,7 @@ def draw_menu(screen):
             else:
                 option.hovered = False
             option.draw()
+
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONUP and option.hovered == True:
                     chosen_option = True
@@ -356,9 +357,7 @@ def draw_menu(screen):
                     pygame.quit()
                 else:
                     pass
-                
-        
-        
+            
         pygame.display.update()
 
 
