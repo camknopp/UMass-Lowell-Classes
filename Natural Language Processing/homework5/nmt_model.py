@@ -37,6 +37,8 @@ class NMT(nn.Module):
         @param dropout_rate (float): Dropout probability, for attention
         """
         super(NMT, self).__init__()
+
+        """
         self.model_embeddings = ModelEmbeddings(embed_size, vocab)
         self.hidden_size = hidden_size
         self.dropout_rate = dropout_rate
@@ -54,6 +56,30 @@ class NMT(nn.Module):
         # For sanity check only, not relevant to implementation
         self.gen_sanity_check = False
         self.counter = 0
+"""
+        self.model_embeddings_source = ModelEmbeddings(embed_size, vocab.src)
+        self.model_embeddings_target = ModelEmbeddings(embed_size, vocab.tgt)
+
+        self.hidden_size = hidden_size
+        self.dropout_rate = dropout_rate
+        self.vocab = vocab
+
+        self.encoder = nn.LSTM(embed_size, hidden_size, bidirectional=True)
+        self.decoder = nn.LSTMCell(embed_size + hidden_size, hidden_size)
+
+        self.h_projection = nn.Linear(hidden_size * 2, hidden_size, bias=False)
+        self.c_projection = nn.Linear(hidden_size * 2, hidden_size, bias=False)
+        self.att_projection = nn.Linear(hidden_size * 2,
+                                        hidden_size,
+                                        bias=False)
+        self.combined_output_projection = nn.Linear(hidden_size * 2 +
+                                                    hidden_size,
+                                                    hidden_size,
+                                                    bias=False)
+        self.target_vocab_projection = nn.Linear(hidden_size,
+                                                 len(vocab.tgt),
+                                                 bias=False)
+        self.dropout = nn.Dropout(self.dropout_rate)
 
 
         ### YOUR CODE HERE (~8 Lines)
@@ -134,16 +160,31 @@ class NMT(nn.Module):
         @returns dec_init_state (tuple(Tensor, Tensor)): Tuple of tensors representing the decoder's initial
                                                 hidden state and cell.
         """
-        
+        """
         X = torch.Tensor(source_padded.size()[0], source_padded.size()[1], self.model_embeddings.embed_size)
         X = pack_padded_sequence(X, source_lengths)
         enc_hiddens, last_hidden, last_cell = self.encoder(X)
         enc_hiddens = pack_padded_sequence(enc_hiddens, source_lengths)
+        """
+        enc_hiddens, dec_init_state = None, None
+
+        X = self.model_embeddings_source(source_padded)
+        # all rnn receive PackedSequence as input!!!
+        X_packed = pack_padded_sequence(X, source_lengths)
+        enc_hiddens, (last_hidden, last_cell) = self.encoder(X_packed)
+        (enc_hiddens, _) = pad_packed_sequence(enc_hiddens)
+        enc_hiddens = enc_hiddens.permute(1, 0, 2)
+
+        init_decoder_hidden = self.h_projection(
+            torch.cat((last_hidden[0], last_hidden[1]), dim=1))
+        init_decoder_cell = self.c_projection(
+            torch.cat((last_cell[0], last_cell[1]), dim=1))
+        dec_init_state = (init_decoder_hidden, init_decoder_cell)
         # need to reshape enc_hiddens 
         
 
 
-        enc_hiddens, dec_init_state = self.encoder(source_padded), 
+        return enc_hiddens, dec_init_state
 
         ### YOUR CODE HERE (~ 8 Lines)
         ### TODO:
