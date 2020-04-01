@@ -37,7 +37,7 @@ def pad_sents(sents, pad_token):
 
     for sent in sents_padded:
         if len(sent) < len(longest_sent): # need to pad sentence if not max length
-            for i in range(len(sent), len(longest_sent) - 1):
+            for i in range(len(sent), len(longest_sent)):
                 sent.append(pad_token)  # pad given sentence to max length
 
     ### END YOUR CODE
