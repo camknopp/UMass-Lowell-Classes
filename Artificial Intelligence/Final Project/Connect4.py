@@ -305,6 +305,26 @@ def Q_learning(board):
     plt.show()
 """
 
+def PSO(board):
+    # based around pseudocode found here http://www.cleveralgorithms.com/nature-inspired/swarm/pso.html
+    c1 = 2
+    c2 = 2
+    r1 = np.random.random()
+    r2 = np.random.random()
+    population_size = 40
+    max_generation = 250
+    g_best = 0
+    particles = []
+
+    for i in range(1, population_size):
+        particles.append((np.random.random(), 
+    
+    board_copy = board.copy()
+
+    
+    return
+
+
 
 def draw_piece(screen, row, col, piece):
     if piece == 1:
@@ -392,7 +412,7 @@ if __name__ == '__main__':
         board = create_board()
         # Q_learning(board)
         game_over = False
-        turn = 0
+        turn = random.choice([0,1])
         turn_num = 0
         screen.fill(EGGSHELL)
         display_wins(screen, minimax_wins, expectimax_wins, tie_games, names)
