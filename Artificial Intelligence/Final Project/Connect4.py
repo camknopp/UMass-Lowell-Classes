@@ -244,7 +244,7 @@ def choose_best_move(board, piece):
         if score > best_score:
             best_score = score
             best_col = col
-
+            
     return best_col
 
 
@@ -305,23 +305,63 @@ def Q_learning(board):
     plt.show()
 """
 
+def fitness(board, x, y):
+    # returns the fitness score of a particle at a given position
+
+    # returns -inf if the particle is in a position that is already occupied (by either player)
+    if board[x][y] != 0:
+        return -math(inf)
+
+    # check whether the move is legal by making sure it is not floating in the middle of the board
+    i = 1
+    while i <= y:
+        if board[x][y-i] == 0:
+            return -math(inf)
+        i+=1
+
+    # now score the fitness at this particular position
+    fitness_score = 0
+
+    # check num pieces horizontally aligned from current position
+    # check num pieces vertically aligned from current position
+    # check num pieces diagonally aligned from current position
+    # add 1 for the num pieces that are aligned 
+    
+
+
+    
+
 def PSO(board):
     # based around pseudocode found here http://www.cleveralgorithms.com/nature-inspired/swarm/pso.html
+    # make fitness function that gives an extremely low score for a given position if it's already occupied
+    # this will allow 
+
     c1 = 2
     c2 = 2
     r1 = np.random.random()
     r2 = np.random.random()
     population_size = 40
     max_generation = 250
-    g_best = 0
+    gbest = -math.inf# the particle with the best fitness value out of the population
+    pbest =  None # the best solution (fitness) that has been achieved so far (fitness val also stored)
     particles = []
-
-    for i in range(1, population_size):
-        particles.append((np.random.random(), 
-    
     board_copy = board.copy()
 
+    # after finding gbest and pbest, the particle updates its velocity and positions with..
+    #... v[i] = v[i] + c1 * rand() * (pbest[] - persent + c2 * rand(0,1)) * (gbest[] - present[]) ( a)
+
+    for i in range(population_size):
+        p_coordinate = (random.choice(range(ROW_COUNT)), random.choice(range(COLUMN_COUNT))))
+        p_veloc = (np.random.random(), np.random.random())
+        p_fitness = None # need to fix this
+        particles.append((p_coordinate, p_veloc, p_fitness))
+        if p_fitness > pbest:
+            gbest = particles[i].copy()
+
+    for 
+
     
+
     return
 
 
