@@ -305,7 +305,7 @@ def Q_learning(board):
     plt.show()
 """
 
-def fitness(board, x, y):
+def fitness(board, x, y, piece):
     # returns the fitness score of a particle at a given position
 
     # returns -inf if the particle is in a position that is already occupied (by either player)
@@ -321,17 +321,13 @@ def fitness(board, x, y):
 
     # now score the fitness at this particular position
     fitness_score = 0
+    board_copy = board.copy() 
+    drop_piece(board.copy(), x, y, piece)
 
-    # check num pieces horizontally aligned from current position
-    # check num pieces vertically aligned from current position
-    # check num pieces diagonally aligned from current position
-    # add 1 for the num pieces that are aligned 
+    return score_position(board_copy, piece)
     
 
-
-    
-
-def PSO(board):
+def PSO(board, piece):
     # based around pseudocode found here http://www.cleveralgorithms.com/nature-inspired/swarm/pso.html
     # make fitness function that gives an extremely low score for a given position if it's already occupied
     # this will allow 
@@ -351,14 +347,28 @@ def PSO(board):
     #... v[i] = v[i] + c1 * rand() * (pbest[] - persent + c2 * rand(0,1)) * (gbest[] - present[]) ( a)
 
     for i in range(population_size):
-        p_coordinate = (random.choice(range(ROW_COUNT)), random.choice(range(COLUMN_COUNT))))
+        p_coord = (random.choice(range(ROW_COUNT)), random.choice(range(COLUMN_COUNT))))
         p_veloc = (np.random.random(), np.random.random())
-        p_fitness = None # need to fix this
-        particles.append((p_coordinate, p_veloc, p_fitness))
+        p_fitness = fitness(board, piece, p_coord[0], p_coord[1]) 
+        particles.append((p_coord, p_veloc, p_fitness))
         if p_fitness > pbest:
-            gbest = particles[i].copy()
+            
+        
 
-    for 
+    for i in range(max_generation):
+        pbest = 0
+        gbest = None
+
+        for j in range(population_size):
+            p_fitness = particles[j][2]
+            if p_fitness > pbest:
+                pbest = P_fitness
+                gbest = particles[j].copy()
+        
+        for j in range(population_size):
+            for k in range(2):
+                particle[j][1][k] = particle[j][1][k] + c1*r1*(particle)
+
 
     
 
