@@ -1,4 +1,5 @@
-# most of code below taken from https://gist.github.com/ohsqueezy/2802185
+# The class below is for a pygame menu option (e.g., "start game") which changes color when your mouse hovers over it
+# most of the code is from https://gist.github.com/ohsqueezy/2802185 , though some small changes were made
 
 import pygame
 
