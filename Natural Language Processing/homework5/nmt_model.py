@@ -53,33 +53,31 @@ class NMT(nn.Module):
         self.combined_output_projection = nn.Linear(len(vocab.src), hidden_size, bias=False)
         self.target_vocab_projection = nn.Linear(len(vocab.tgt), hidden_size, bias=False)
         self.dropout = nn.Dropout(p=dropout_rate)
-        # For sanity check only, not relevant to implementation
-        self.gen_sanity_check = False
-        self.counter = 0
+        
 """
-       # self.model_embeddings_source = ModelEmbeddings(embed_size, vocab.src)
-       # self.model_embeddings_target = ModelEmbeddings(embed_size, vocab.tgt)
         self.model_embeddings = ModelEmbeddings(embed_size, vocab)
         self.hidden_size = hidden_size
         self.dropout_rate = dropout_rate
         self.vocab = vocab
 
-        self.encoder = nn.LSTM(embed_size, hidden_size, bidirectional=True)
-        self.decoder = nn.LSTMCell(embed_size + hidden_size, hidden_size)
-
+        self.encoder = nn.LSTM(input_size=embed_size, hidden_size=hidden_size, bias=True, dropout=dropout_rate, bidirectional=True)
+        self.decoder = nn.LSTMCell(input_size=embed_size + hidden_size, hidden_size=hidden_size, bias=True)
         self.h_projection = nn.Linear(hidden_size * 2, hidden_size, bias=False)
         self.c_projection = nn.Linear(hidden_size * 2, hidden_size, bias=False)
         self.att_projection = nn.Linear(hidden_size * 2,
                                         hidden_size,
                                         bias=False)
-        self.combined_output_projection = nn.Linear(hidden_size * 2 +
-                                                    hidden_size,
+        self.combined_output_projection = nn.Linear(hidden_size * 3,
                                                     hidden_size,
                                                     bias=False)
         self.target_vocab_projection = nn.Linear(hidden_size,
                                                  len(vocab.tgt),
                                                  bias=False)
-        self.dropout = nn.Dropout(self.dropout_rate)
+        self.dropout = nn.Dropout(p=dropout_rate)
+
+        # For sanity check only, not relevant to implementation
+        self.gen_sanity_check = False
+        self.counter = 0
 
 
         ### YOUR CODE HERE (~8 Lines)
@@ -160,28 +158,15 @@ class NMT(nn.Module):
         @returns dec_init_state (tuple(Tensor, Tensor)): Tuple of tensors representing the decoder's initial
                                                 hidden state and cell.
         """
-        """
-        X = torch.Tensor(source_padded.size()[0], source_padded.size()[1], self.model_embeddings.embed_size)
-        X = pack_padded_sequence(X, source_lengths)
-        enc_hiddens, last_hidden, last_cell = self.encoder(X)
-        enc_hiddens = pack_padded_sequence(enc_hiddens, source_lengths)
-        """
-        enc_hiddens, dec_init_state = None, None
 
         X = self.model_embeddings.source(source_padded)
-        # all rnn receive PackedSequence as input!!!
-        X_packed = pack_padded_sequence(X, source_lengths)
-        enc_hiddens, (last_hidden, last_cell) = self.encoder(X_packed)
-        (enc_hiddens, _) = pad_packed_sequence(enc_hiddens)
-        enc_hiddens = enc_hiddens.permute(1, 0, 2)
-
-        init_decoder_hidden = self.h_projection(
-            torch.cat((last_hidden[0], last_hidden[1]), dim=1))
-        init_decoder_cell = self.c_projection(
-            torch.cat((last_cell[0], last_cell[1]), dim=1))
-        dec_init_state = (init_decoder_hidden, init_decoder_cell)
-        # need to reshape enc_hiddens 
-        
+        X = pack_padded_sequence(X, source_lengths)
+        enc_hiddens, last_hidden, last_cell = self.encoder(X)
+        enc_hiddens = enc_hiddens.permute(1,0,2) # reshape the tensor
+        int_decoder_hidden = torch.cat((last_hidden[0], last_hidden[1]), dim=1))
+        int_decoder_hidden = self.h_projection(int_decoder_hidden)
+        int_decoder_cell = torch.cat((last_cell[0], last_cell[1]), dim=1))
+        int_decoder_cell = self.c_projection(int_decoder_cell)
 
 
         return enc_hiddens, dec_init_state
@@ -253,6 +238,22 @@ class NMT(nn.Module):
 
         # Initialize a list we will use to collect the combined output o_t on each step
         combined_outputs = []
+
+        enc_hiddens_proj = self.att_projection(enc_hiddens)
+        Y = model_embeddings.tgt(target_padded)
+
+        for Y_t in torch.split(Y, 1)
+            Y_t = torch.squeeze(Y_t, 1)
+            Ybar_t = torch.cat([o_prev, Y_t], dim=-1)
+            dec_state, o_t = self.step(Ybar_t, dec_state, enc_hiddens, enc_hiddens_proj, enc_masks)[:2]
+            combined_outputs.append(o_t)
+            o_prev = o_t
+
+        combined_outputs = torch.stack(combined_outputs)
+
+        return combined_outputs
+
+
 
         ### YOUR CODE HERE (~9 Lines)
         ### TODO:
