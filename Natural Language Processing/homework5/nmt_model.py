@@ -168,6 +168,7 @@ class NMT(nn.Module):
         int_decoder_hidden = self.h_projection(int_decoder_hidden)
         int_decoder_cell = torch.cat((last_cell[0], last_cell[1]), dim=1)
         int_decoder_cell = self.c_projection(int_decoder_cell)
+        dec_init_state = (int_decoder_hidden, int_decoder_cell)
 
 
         return enc_hiddens, dec_init_state
