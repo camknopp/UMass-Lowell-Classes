@@ -168,7 +168,7 @@ class NMT(nn.Module):
         """
         enc_hiddens, dec_init_state = None, None
 
-        X = self.model_embeddings_source(source_padded)
+        X = self.model_embeddings.source(source_padded)
         # all rnn receive PackedSequence as input!!!
         X_packed = pack_padded_sequence(X, source_lengths)
         enc_hiddens, (last_hidden, last_cell) = self.encoder(X_packed)
