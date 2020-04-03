@@ -57,9 +57,9 @@ class NMT(nn.Module):
         self.gen_sanity_check = False
         self.counter = 0
 """
-        self.model_embeddings_source = ModelEmbeddings(embed_size, vocab.src)
-        self.model_embeddings_target = ModelEmbeddings(embed_size, vocab.tgt)
-
+       # self.model_embeddings_source = ModelEmbeddings(embed_size, vocab.src)
+       # self.model_embeddings_target = ModelEmbeddings(embed_size, vocab.tgt)
+        self.model_embeddings = ModelEmbeddings(embed_size, vocab)
         self.hidden_size = hidden_size
         self.dropout_rate = dropout_rate
         self.vocab = vocab
