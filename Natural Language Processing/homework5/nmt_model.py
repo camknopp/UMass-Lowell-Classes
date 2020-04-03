@@ -242,7 +242,7 @@ class NMT(nn.Module):
         combined_outputs = []
 
         enc_hiddens_proj = self.att_projection(enc_hiddens)
-        Y = self.model_embeddings.tgt(target_padded)
+        Y = self.model_embeddings.target(target_padded)
 
         for Y_t in torch.split(Y, 1):
             Y_t = torch.squeeze(Y_t, 1)
