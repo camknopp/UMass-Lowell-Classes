@@ -163,7 +163,7 @@ class NMT(nn.Module):
         X = pack_padded_sequence(X, source_lengths)
         enc_hiddens, last_hidden, last_cell = self.encoder(X)
         enc_hiddens = enc_hiddens.permute(1,0,2) # reshape the tensor
-        int_decoder_hidden = torch.cat((last_hidden[0], last_hidden[1]), dim=1))
+        int_decoder_hidden = torch.cat((last_hidden[0], last_hidden[1]), dim=1)
         int_decoder_hidden = self.h_projection(int_decoder_hidden)
         int_decoder_cell = torch.cat((last_cell[0], last_cell[1]), dim=1)
         int_decoder_cell = self.c_projection(int_decoder_cell)
