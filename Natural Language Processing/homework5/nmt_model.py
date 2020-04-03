@@ -332,6 +332,10 @@ class NMT(nn.Module):
 
         combined_output = None
 
+        dec_state = self.decode(Ybar_t, dec_state)
+        (dec_hidden, dec_cell) = dec_state
+        e_t = torch.bmm(enc_hiddens_proj, dec_hidden.unsqueeze(2)).squeeze(2)
+
         ### YOUR CODE HERE (~3 Lines)
         ### TODO:
         ###     1. Apply the decoder to `Ybar_t` and `dec_state`to obtain the new dec_state.
@@ -361,6 +365,14 @@ class NMT(nn.Module):
         # Set e_t to -inf where enc_masks has 1
         if enc_masks is not None:
             e_t.data.masked_fill_(enc_masks.bool(), -float('inf'))
+        
+        alpha_t = F.softmax(e_t, 1)
+        a_t = torch.bmm(alpha_t.view(alpha_t.size(0), 1, alpha_t.size(1)), enc_hiddens).squeeze(1)
+        U_t = torch.cat([dec_hidden, a_t], 1)
+        V_t = self.combined_output_projection(U_t)
+        O_t = self.dropout(torch.tanh(V_t))
+
+
 
         ### YOUR CODE HERE (~6 Lines)
         ### TODO:
