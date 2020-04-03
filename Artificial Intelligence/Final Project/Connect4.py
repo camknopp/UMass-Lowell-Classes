@@ -17,11 +17,8 @@ COLUMN_COUNT = 7
 COLUMN_SPACING = 50
 ROW_SPACING = 50
 LEFT_MARGIN = 250
-BOTTOM_MARGIN = 250
 TOP_MARGIN = 750
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-EGGSHELL = (240, 234, 214)
+EGGSHELL = (240, 234, 214)  # used for the screen's background color
 
 
 def create_board():
@@ -129,97 +126,107 @@ def score_position(board, piece):
     return score
 
 
-def is_terminal_node(board):
-    return winning_move(board, 1) or winning_move(board, 2) or len(get_valid_locations(board)) == 0
+def is_terminal(board):
+    if winning_move(board, 1):
+        return True
+    elif winning_move(board, 2):
+        return True
+    elif len(get_valid_locations(board)) == 0:
+        return True
+    else:
+        return False
 
 
 def minimax(board, depth, maximizingPlayer):
-    valid_locations = get_valid_locations(board)
-    is_terminal = is_terminal_node(board)
+    # performs minimax algorithm to find best move
+    # code based upon pseudocode found here https://en.wikipedia.org/wiki/Minimax
 
-    if depth == 0 or is_terminal:
+   # valid_locations = get_valid_locations(board)
 
-        if is_terminal:
-            if winning_move(board, 2):
-                return (None, 10000000000)
-            elif winning_move(board, 1):
-                return (None, -1000000000)
-            else:
-                return (None, 0)
+    if is_terminal(board):
+        if winning_move(board, 2):
+            return (0, math.inf)
+        elif winning_move(board, 1):
+            return (0, -math.inf)
         else:
-            return (None, score_position(board, 2))
+            return (0, 0)
+
+    if depth == 0:
+        return (None, score_position(board, 2))
 
     if maximizingPlayer:
         value = -math.inf
-        column = random.choice(valid_locations)
-        for col in valid_locations:
+        valid = get_valid_locations(board)
+        column = random.choice(valid)
+        for col in valid:
             row = get_next_open_row(board, col)
-            b_copy = board.copy()
-            drop_piece(b_copy, row, col, 2)
-            new_score = minimax(b_copy, depth-1, False)[1]
-            if new_score > value:
-                value = new_score
+            board_copy = board.copy()
+            drop_piece(board_copy, row, col, 2)
+            score = minimax(board_copy, depth-1, False)[1]
+            if score > value:
+                value = score
                 column = col
         return column, value
 
     else:
         value = math.inf
-        column = random.choice(valid_locations)
-        for col in valid_locations:
+        valid = get_valid_locations(board)
+        column = random.choice(valid)
+        for col in valid:
             row = get_next_open_row(board, col)
-            b_copy = board.copy()
-            drop_piece(b_copy, row, col, 1)
-            new_score = minimax(b_copy, depth-1, True)[1]
-            if new_score < value:
-                value = new_score
+            board_copy = board.copy()
+            drop_piece(board_copy, row, col, 1)
+            score = minimax(board_copy, depth-1, True)[1]
+            if score < value:
+                value = score
                 column = col
         return column, value
 
 
 def expectimax(board, depth, maximizingPlayer):
-    valid_locations = get_valid_locations(board)
-    is_terminal = is_terminal_node(board)
 
-    if depth == 0 or is_terminal:
-
-        if is_terminal:
-            if winning_move(board, 2):
-                return (None, 10000000000)
-            elif winning_move(board, 1):
-                return (None, -1000000000)
-            else:
-                return (None, 0)
+    if is_terminal(board):
+        if winning_move(board, 2):
+            return (0, math.inf)
+        elif winning_move(board, 1):
+            return (0, -math.inf)
         else:
-            return (None, score_position(board, 2))
+            return (0, 0)
+
+    if depth == 0:
+        return (None, score_position(board, 2))
 
     if maximizingPlayer:
         value = -math.inf
-        column = random.choice(valid_locations)
-        for col in valid_locations:
+        valid = get_valid_locations(board)
+        column = random.choice(valid)
+        for col in valid:
             row = get_next_open_row(board, col)
-            b_copy = board.copy()
-            drop_piece(b_copy, row, col, 2)
-            new_score = minimax(b_copy, depth-1, False)[1]
-            if new_score > value:
-                value = new_score
+            board_copy = board.copy()
+            drop_piece(board_copy, row, col, 2)
+            score = minimax(board_copy, depth-1, False)[1]
+            if score > value:
+                value = score
                 column = col
         return column, value
 
     else:
         value = math.inf
-        column = random.choice(valid_locations)
+        valid = get_valid_locations(board)
+        column = random.choice(valid)
         nodes = []
-        for col in valid_locations:
+        for col in valid:
             row = get_next_open_row(board, col)
-            b_copy = board.copy()
-            drop_piece(b_copy, row, col, 1)
-            new_score = minimax(b_copy, depth-1, True)[1]
-            nodes.append(new_score)
-            if new_score < value:
-                value = new_score
+            board_copy = board.copy()
+            drop_piece(board_copy, row, col, 1)
+            score = minimax(board_copy, depth-1, True)[1]
+            nodes.append(score)
+            if score < value:
+                value = score
                 column = col
+
         total = sum(nodes)
-        return column, (total/len(valid_locations))
+        return column, (total/len(valid))
 
 
 def get_valid_locations(board):
@@ -244,7 +251,7 @@ def choose_best_move(board, piece):
         if score > best_score:
             best_score = score
             best_col = col
-            
+
     return best_col
 
 
@@ -305,32 +312,32 @@ def Q_learning(board):
     plt.show()
 """
 
+
 def fitness(board, x, y, piece):
     # returns the fitness score of a particle at a given position
 
     # returns -inf if the particle is in a position that is already occupied (by either player)
     if board[x][y] != 0:
-        return -math(inf)
+        return -math.inf
 
     # check whether the move is legal by making sure it is not floating in the middle of the board
     i = 1
     while i <= y:
         if board[x][y-i] == 0:
-            return -math(inf)
-        i+=1
+            return -math.inf
+        i += 1
 
     # now score the fitness at this particular position
     fitness_score = 0
-    board_copy = board.copy() 
+    board_copy = board.copy()
     drop_piece(board.copy(), x, y, piece)
 
+    # Probably need to design a different metric for determining fitness of a particle
     return score_position(board_copy, piece)
-    
+
 
 def PSO(board, piece):
     # based around pseudocode found here http://www.cleveralgorithms.com/nature-inspired/swarm/pso.html
-    # make fitness function that gives an extremely low score for a given position if it's already occupied
-    # this will allow 
 
     c1 = 2
     c2 = 2
@@ -338,22 +345,23 @@ def PSO(board, piece):
     r2 = np.random.random()
     population_size = 40
     max_generation = 250
-    gbest = -math.inf# the particle with the best fitness value out of the population
-    pbest =  None # the best solution (fitness) that has been achieved so far (fitness val also stored)
+    gbest = -math.inf  # the particle with the best fitness value out of the population
+    # the best solution (fitness) that has been achieved so far (fitness val also stored)
+    pbest = None
     particles = []
     board_copy = board.copy()
 
     # after finding gbest and pbest, the particle updates its velocity and positions with..
-    #... v[i] = v[i] + c1 * rand() * (pbest[] - persent + c2 * rand(0,1)) * (gbest[] - present[]) ( a)
+    # ... v[i] = v[i] + c1 * rand() * (pbest[] - persent + c2 * rand(0,1)) * (gbest[] - present[]) ( a)
 
     for i in range(population_size):
-        p_coord = (random.choice(range(ROW_COUNT)), random.choice(range(COLUMN_COUNT))))
+        p_coord = (random.choice(range(ROW_COUNT)),
+                   random.choice(range(COLUMN_COUNT)))
         p_veloc = (np.random.random(), np.random.random())
-        p_fitness = fitness(board, piece, p_coord[0], p_coord[1]) 
+        p_fitness = fitness(board, piece, p_coord[0], p_coord[1])
         particles.append((p_coord, p_veloc, p_fitness))
         if p_fitness > pbest:
-            
-        
+            pass
 
     for i in range(max_generation):
         pbest = 0
@@ -362,18 +370,15 @@ def PSO(board, piece):
         for j in range(population_size):
             p_fitness = particles[j][2]
             if p_fitness > pbest:
-                pbest = P_fitness
+                pbest = p_fitness
                 gbest = particles[j].copy()
-        
+
         for j in range(population_size):
             for k in range(2):
-                particle[j][1][k] = particle[j][1][k] + c1*r1*(particle)
-
-
-    
+                pass
+               # particles[j][1][k] = particles[j][1][k] + c1*r1*(particle)
 
     return
-
 
 
 def draw_piece(screen, row, col, piece):
@@ -393,7 +398,6 @@ def draw_board(board, screen):
         for column in range(7):
             # Calculate our location
             x = column * COLUMN_SPACING + LEFT_MARGIN
-            #y = row * ROW_SPACING + BOTTOM_MARGIN
             y = TOP_MARGIN - row * ROW_SPACING
 
             pygame.draw.circle(screen, (255, 255, 255), (x, y), 10, 3)
@@ -405,11 +409,12 @@ def game_with_graphics():
 
 
 def draw_menu(screen):
-    options = [Option("Start Game", (400, 350), screen), Option("Quit", (400, 600), screen) , Option("<", (200, 475), screen), Option(">", (400, 475), screen) ]
+    options = [Option("Start Game", (400, 350), screen), Option(
+        "Quit", (400, 600), screen), Option("<", (200, 475), screen), Option(">", (400, 475), screen)]
     chosen_option = False
 
     while chosen_option == False:
-        #for event in pygame.event.get():
+        # for event in pygame.event.get():
         pygame.event.pump()
 
         for option in options:
@@ -427,7 +432,7 @@ def draw_menu(screen):
                     pygame.quit()
                 else:
                     pass
-            
+
         pygame.display.update()
 
 
@@ -456,13 +461,13 @@ if __name__ == '__main__':
     pygame.init()
     screen = pygame.display.set_mode((800, 800))
     screen.fill(EGGSHELL)
-    draw_menu(screen)
+    # draw_menu(screen)
 
     while expectimax_wins != 100 or minimax_wins != 100:
         board = create_board()
         # Q_learning(board)
         game_over = False
-        turn = random.choice([0,1])
+        turn = random.choice([0, 1])
         turn_num = 0
         screen.fill(EGGSHELL)
         display_wins(screen, minimax_wins, expectimax_wins, tie_games, names)
@@ -541,7 +546,6 @@ if __name__ == '__main__':
                     pygame.quit()
 
             time.sleep(.75)
-            #draw_board(board, screen)
             print_board(board)
 
             turn = (turn+1) % 2
