@@ -315,7 +315,7 @@ class NMT(nn.Module):
 
         combined_output = None
 
-        dec_state = self.decode(Ybar_t, dec_state)
+        dec_state = self.decoder(Ybar_t, dec_state)
         (dec_hidden, dec_cell) = dec_state
         e_t = torch.bmm(enc_hiddens_proj, dec_hidden.unsqueeze(2)).squeeze(2)
 
