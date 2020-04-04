@@ -29,7 +29,7 @@ class ModelEmbeddings(nn.Module):
 
         # default values
         self.source = nn.Embedding(vocab.src.__len__(), embed_size)
-        self.target = nn.Embedding(embed_size, vocab.tgt.__len__())
+        self.target = nn.Embedding(vocab.tgt.__len__(), embed_size)
 
         src_pad_token_idx = vocab.src['<pad>']
         tgt_pad_token_idx = vocab.tgt['<pad>']

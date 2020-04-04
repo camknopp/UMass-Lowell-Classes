@@ -38,23 +38,6 @@ class NMT(nn.Module):
         """
         super(NMT, self).__init__()
 
-        """
-        self.model_embeddings = ModelEmbeddings(embed_size, vocab)
-        self.hidden_size = hidden_size
-        self.dropout_rate = dropout_rate
-        self.vocab = vocab
-
-        # default values
-        self.encoder = nn.LSTM(input_size=len(vocab.src), hidden_size=hidden_size, bias=True, dropout=dropout_rate)
-        self.decoder = nn.LSTMCell(input_size=len(vocab.src), hidden_size=hidden_size, bias=True)
-        self.h_projection = nn.Linear(len(vocab.src), hidden_size, bias=False)
-        self.c_projection = nn.Linear(len(vocab.src), hidden_size, bias=False)
-        self.att_projection = nn.Linear(len(vocab.src), hidden_size, bias=False)
-        self.combined_output_projection = nn.Linear(len(vocab.src), hidden_size, bias=False)
-        self.target_vocab_projection = nn.Linear(len(vocab.tgt), hidden_size, bias=False)
-        self.dropout = nn.Dropout(p=dropout_rate)
-        
-"""
         self.model_embeddings = ModelEmbeddings(embed_size, vocab)
         self.hidden_size = hidden_size
         self.dropout_rate = dropout_rate
