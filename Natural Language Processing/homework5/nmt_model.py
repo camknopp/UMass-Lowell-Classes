@@ -317,7 +317,9 @@ class NMT(nn.Module):
 
         dec_state = self.decoder(Ybar_t, dec_state)
         (dec_hidden, dec_cell) = dec_state
-        e_t = torch.bmm(enc_hiddens_proj, dec_hidden.unsqueeze(2)).squeeze(2)
+        dec_hidden_unsqueeze = torch.unsqueeze(dec_hidden, 2)
+        e_t_ = torch.bmm(enc_hiddens_proj, dec_hidden_unsqueeze)
+        e_t = torch.squeeze(e_t_, 2)
 
         ### YOUR CODE HERE (~3 Lines)
         ### TODO:
