@@ -28,11 +28,11 @@ class ModelEmbeddings(nn.Module):
         self.embed_size = embed_size
 
         # default values
-        self.source = nn.Embedding(vocab.src.__len__(), embed_size)
-        self.target = nn.Embedding(vocab.tgt.__len__(), embed_size)
-
+        
         src_pad_token_idx = vocab.src['<pad>']
         tgt_pad_token_idx = vocab.tgt['<pad>']
+        self.source = nn.Embedding(len(vocab.src), embed_size, srs_pad_token_idx)
+        self.target = nn.Embedding(embed_size, len(vocab.tgt), tgt_pad_token_idx)
 
         ### YOUR CODE HERE (~2 Lines)
         ### TODO - Initialize the following variables:
