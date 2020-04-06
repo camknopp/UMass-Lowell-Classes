@@ -229,7 +229,7 @@ class NMT(nn.Module):
 
         for Y_t in torch.split(Y, 1):
             Y_t = torch.squeeze(Y_t, 0)
-            Ybar_t = torch.cat([o_prev, Y_t], dim=-1)
+            Ybar_t = torch.cat([Y_t, o_prev], dim=-1)
             dec_state, o_t = self.step(Ybar_t, dec_state, enc_hiddens, enc_hiddens_proj, enc_masks)[:2]
             combined_outputs.append(o_t)
             o_prev = o_t
@@ -351,8 +351,9 @@ class NMT(nn.Module):
         if enc_masks is not None:
             e_t.data.masked_fill_(enc_masks.bool(), -float('inf'))
         
-        alpha_t = F.softmax(e_t, 1)
-        a_t = torch.bmm(alpha_t.view(alpha_t.size(0), 1, alpha_t.size(1)), enc_hiddens).squeeze(1)
+        alpha_t = F.softmax(e_t, dim=-1)
+        a_t = torch.bmm(alpha_t.view(alpha_t.size(0), 1, alpha_t.size(1)), enc_hiddens) 
+        a_t = torch.squeeze(a_t, 1)
         U_t = torch.cat([dec_hidden, a_t], 1)
         V_t = self.combined_output_projection(U_t)
         O_t = self.dropout(torch.tanh(V_t))
