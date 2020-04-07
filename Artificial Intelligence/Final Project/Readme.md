@@ -1,1 +1,1 @@
-# Four AI face off in a game of Connect 4
+# 3 AI face off in a Connect 4 tournament

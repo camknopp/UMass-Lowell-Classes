@@ -254,65 +254,6 @@ def choose_best_move(board, piece):
 
     return best_col
 
-
-def max_action(Q, state, actions):
-    print(Q)
-
-    values = np.array([Q[state, a] for a in actions])
-    action = np.argmax(values)
-    return max(val)  # actions[actions]
-
-
-def Q_learning(board):
-    pass
-    """
-    env = gym.make('connect4-v0')  # create gym environment for training agent
-    alpha = 0.1
-    gamma = 1.0
-    epsilon = 1.0
-
-    Q = {}
-    for state in range(ROW_COUNT * COLUMN_COUNT):
-        for action in range(7):
-            Q[state, action] = 0
-
-    num_games = 50000
-    total_rewards = np.zeros(num_games)
-
-    for i in range(num_games):
-        if i % 5000 == 0:
-            print('starting game {}'.format(i))
-
-        done = False
-        epRewards = 0
-        observation = env.reset()
-
-        while not done:
-            rand = np.random.random()
-            if rand < (1-epsilon):
-                action = max_action(
-                    Q, observation, get_valid_locations(observation))
-            else:
-                action = np.random.choice(get_valid_locations(observation))
-
-            observation_, reward, done, info = env.step(action)
-            epRewards += reward
-            action_ = max_action(
-                Q, observation_, get_valid_locations(observation_))
-            Q[observation, action] = Q[observation, action] + alpha*(reward +
-                                                                     gamma*Q[observation_, action_] - Q[observation, action])
-            observation = observation_ # update observation
-
-        if epsilon - 2 / num_games > 0:
-            epsilon -= 2 / num_games
-        else:
-            epsilon = 0
-        total_rewards[i] = epRewards
-    plt.plot(total_rewards)
-    plt.show()
-"""
-
-
 def fitness(board, x, y, piece):
     # returns the fitness score of a particle at a given position
 
@@ -465,7 +406,6 @@ if __name__ == '__main__':
 
     while expectimax_wins != 100 or minimax_wins != 100:
         board = create_board()
-        # Q_learning(board)
         game_over = False
         turn = random.choice([0, 1])
         turn_num = 0
