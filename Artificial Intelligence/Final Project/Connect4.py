@@ -125,6 +125,27 @@ def score_position(board, piece):
 
     return score
 
+def evaluate_pos(board, player):
+    opponent_score = 0
+    player_score = 0
+
+    # determine which piece belongs to the player
+    opponent = 1
+    if player == 1:
+        opponent = 2
+
+    """
+    For each current position where there is a friendly piece, add to the score points which correspond to the
+    num ways that 4 can be reached from that position, furthermore, add on a 
+
+    """
+
+    return 
+    
+
+    # find the number of horizontal 
+    
+
 
 def is_terminal(board):
     if winning_move(board, 1):
@@ -140,8 +161,6 @@ def is_terminal(board):
 def minimax(board, depth, maximizingPlayer):
     # performs minimax algorithm to find best move
     # code based upon pseudocode found here https://en.wikipedia.org/wiki/Minimax
-
-   # valid_locations = get_valid_locations(board)
 
     if is_terminal(board):
         if winning_move(board, 2):
@@ -254,27 +273,81 @@ def choose_best_move(board, piece):
 
     return best_col
 
-def fitness(board, x, y, piece):
+def fitness(board, row, col, piece):
     # returns the fitness score of a particle at a given position
+    opponent = 2
+    if piece == 2:
+        opponent = 1
 
     # returns -inf if the particle is in a position that is already occupied (by either player)
-    if board[x][y] != 0:
+    if board[row][col] != 0:
         return -math.inf
 
     # check whether the move is legal by making sure it is not floating in the middle of the board
-    i = 1
-    while i <= y:
-        if board[x][y-i] == 0:
+    i = 0
+    while i <= row:
+        if board[row-1][col] == 0:
             return -math.inf
         i += 1
 
-    # now score the fitness at this particular position
-    fitness_score = 0
-    board_copy = board.copy()
-    drop_piece(board.copy(), x, y, piece)
+    horizontal_score = 0
+    vertical_score = 0
+    pos_diag_score = 0
+    neg_diag_score = 0
+
+    # get the lower and upper bounds for the columns for a 4-in-a-row horizontal win from curr position
+    lower_col = col - 3
+    if lower_col < 0:
+        lower_col = 0
+
+    upper_col = col + 3
+    if upper_col > COLUMN_COUNT-1:
+        upper_col = COLUMN_COUNT-1
+
+    curr_col = lower_col
+    # add +1 to horizontal_score for every horiz. 4-in-a-row that can potentially happen from given pos
+    while curr_col <= col and curr_col+3 <= upper_col:
+        if board[row][curr_col] != opponent and board[row][curr_col+1] != opponent and board[row][curr_col+2] != opponent and board[row][curr_col+3] != opponent
+            horizontal_score+=1
+        curr_col+=1
+
+
+    lower_row = row - 3
+    if lower_row < 0:
+        lower_row = 0
+
+    upper_row = row + 3
+    if upper_row > ROW_COUNT-1:
+        upper_row = ROW_COUNT-1
+
+    # add +1 to vertical_score for every vert. 4-in-a-row that can potentially occur from given pos
+    curr_row = lower_row
+    while curr_row <= row and curr_row+3 <= upper_row:
+        if board[curr_row][col] != opponent and board[curr_row+1][col] != opponent and board[curr_row+2][col] != opponent and board[curr_row+3][col] != opponent
+            vertical_score+=1
+        curr_row+=1
+
+    curr_row = lower_row
+    curr_col = lower_col
+
+    # add +1 to pos_diag_score for every positively-sloped 4-in-a-row that can potentially occur from given pos
+
+
+
+
+    # add +1 to neg_diag_score for every negatively-sloped 4-in-a-row that can potentially occur from given pos
+    curr_row = lower_row
+    curr_col = lower_col
+
+
+    return horizontal_score + vertical_score + pos_diag_score + neg_diag_score
+
+
+    
+
 
     # Probably need to design a different metric for determining fitness of a particle
-    return score_position(board_copy, piece)
+    #return score_position(board_copy, piece)
 
 
 def PSO(board, piece):
