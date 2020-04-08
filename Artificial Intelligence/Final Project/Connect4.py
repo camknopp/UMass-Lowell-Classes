@@ -6,9 +6,6 @@ import matplotlib.pyplot as plt
 import math
 import time
 import random
-import arcade
-import gym
-#import gym_connect4
 import pygame
 from menu_option import Option
 
@@ -275,6 +272,8 @@ def choose_best_move(board, piece):
 
 def fitness(board, row, col, piece):
     # returns the fitness score of a particle at a given position
+    # fitness score is the number of potential 4-in-a-rows that can occur from the given particle's position
+
     opponent = 2
     if piece == 2:
         opponent = 1
@@ -284,9 +283,9 @@ def fitness(board, row, col, piece):
         return -math.inf
 
     # check whether the move is legal by making sure it is not floating in the middle of the board
-    i = 0
+    i = 1
     while i <= row:
-        if board[row-1][col] == 0:
+        if board[row-i][col] == 0:
             return -math.inf
         i += 1
 
@@ -307,11 +306,11 @@ def fitness(board, row, col, piece):
     curr_col = lower_col
     # add +1 to horizontal_score for every horiz. 4-in-a-row that can potentially happen from given pos
     while curr_col <= col and curr_col+3 <= upper_col:
-        if board[row][curr_col] != opponent and board[row][curr_col+1] != opponent and board[row][curr_col+2] != opponent and board[row][curr_col+3] != opponent
+        if board[row][curr_col] != opponent and board[row][curr_col+1] != opponent and board[row][curr_col+2] != opponent and board[row][curr_col+3] != opponent:
             horizontal_score+=1
         curr_col+=1
 
-
+    # get the lower and upper bounds for rows for a 4-in-a-row vertical win from curr position
     lower_row = row - 3
     if lower_row < 0:
         lower_row = 0
@@ -323,31 +322,39 @@ def fitness(board, row, col, piece):
     # add +1 to vertical_score for every vert. 4-in-a-row that can potentially occur from given pos
     curr_row = lower_row
     while curr_row <= row and curr_row+3 <= upper_row:
-        if board[curr_row][col] != opponent and board[curr_row+1][col] != opponent and board[curr_row+2][col] != opponent and board[curr_row+3][col] != opponent
+        if board[curr_row][col] != opponent and board[curr_row+1][col] != opponent and board[curr_row+2][col] != opponent and board[curr_row+3][col] != opponent:
             vertical_score+=1
         curr_row+=1
+
 
     curr_row = lower_row
     curr_col = lower_col
 
     # add +1 to pos_diag_score for every positively-sloped 4-in-a-row that can potentially occur from given pos
+    while curr_row <= row and curr_row+3 <= upper_row and curr_col <= col and curr_col+3 <= upper_col:
+        if board[curr_row][curr_col] != opponent and board[curr_row+1][curr_col+1] != opponent and board[curr_row+2][curr_col+2] != opponent and board[curr_row+3][curr_col+3] != opponent:
+            pos_diag_score+=1
+        curr_row+=1
+        curr_col+=1
 
 
 
-
-    # add +1 to neg_diag_score for every negatively-sloped 4-in-a-row that can potentially occur from given pos
-    curr_row = lower_row
+    curr_row = upper_row # want to start at the highest row and move down, since we are looking for negative diagonals
     curr_col = lower_col
+    # add +1 to neg_diag_score for every negatively-sloped 4-in-a-row that can potentially occur from given pos
+    while curr_row >= row and curr_row-3 >= lower_row and curr_col <= col and curr_col+3 <= upper_col:
+        if board[curr_row][curr_col] != opponent and board[curr_row-1][curr_col+1] != opponent and board[curr_row-2][curr_col+2] != opponent and board[curr_row-3][curr_col+3] != opponent:
+            neg_diag_score+=1
+        curr_row-=1
+        curr_col+=1
+
+    print("horz: {}".format(horizontal_score))
+    print("vert: {}".format(vertical_score))
+    print("pos diag: {}".format(pos_diag_score))
+    print("neg diag: {}".format(neg_diag_score))
 
 
     return horizontal_score + vertical_score + pos_diag_score + neg_diag_score
-
-
-    
-
-
-    # Probably need to design a different metric for determining fitness of a particle
-    #return score_position(board_copy, piece)
 
 
 def PSO(board, piece):
@@ -463,9 +470,7 @@ def display_wins(screen, player_one_wins, player_two_wins, ties, names):
     ties = font.render("Ties: "+str(ties), True, (0, 0, 0))
     screen.blit(ties, (350, 0))
 
-
-if __name__ == '__main__':
-
+def run_game_with_graphics():
     expectimax_wins = 0
     minimax_wins = 0
     tie_games = 0
@@ -568,3 +573,45 @@ if __name__ == '__main__':
 
     print("minimax wins: {}".format(minimax_wins))
     print("expectimax wins: {}".format(expectimax_wins))
+
+
+def run_game_no_graphics():
+    pass
+
+
+if __name__ == '__main__':
+
+    answer = ""
+    print("Would you like to run the game with graphics? (y/n)")
+    input(answer)
+
+    board = create_board()
+    b_copy = board.copy()
+   # drop_piece(board, 0, 3, 1)
+    #print_board(board)
+    drop_piece(b_copy, 0, 3, 1)
+    print_board(b_copy)
+    print(fitness(board, 0, 3, 1))
+
+    drop_piece(b_copy, 0, 2, 1)
+    print_board(b_copy)
+    print(fitness(board, 0, 2, 1))
+
+    print(fitness(board, 0, 1, 1))
+    print(fitness(board, 0, 0, 1))
+    print(fitness(board, 0, 4, 1))
+    print(fitness(board, 0, 5, 1))
+
+    #run_game_with_graphics()
+
+
+    """
+    
+
+    if answer == 'y':
+        run_game_with_graphics()
+    else:
+        run_game_no_graphics()
+"""
+
+    
