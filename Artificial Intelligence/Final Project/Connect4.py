@@ -296,6 +296,7 @@ def fitness(board, row, col, piece):
         upper_col = COLUMN_COUNT-1
 
     curr_col = lower_col
+
     # add +1 to horizontal_score for every horiz. 4-in-a-row that can potentially happen from given pos
     while curr_col <= col and curr_col+3 <= upper_col:
         if board[row][curr_col] != opponent and board[row][curr_col+1] != opponent and board[row][curr_col+2] != opponent and board[row][curr_col+3] != opponent:
@@ -319,35 +320,73 @@ def fitness(board, row, col, piece):
         curr_row+=1
 
 
-    curr_row = lower_row
-    curr_col = lower_col
+    # reset these values
+    curr_col = col
+    curr_row = row
+
+    # now need to determine the upper_row and upper_col values for use in scoring the negatively-sloped diagonals
+    done = False
+    while not done:
+        curr_col+=1
+        curr_row+=1
+        if curr_col > COLUMN_COUNT-1 or curr_row > ROW_COUNT-1 or curr_col == col+4:
+            # print("curr_col > COLUMN_COUNT-1? {}".format(curr_col > COLUMN_COUNT-1))
+            # print("curr_row > ROW_COUNT-1? {}".format(curr_row > ROW_COUNT-1))
+            # print("curr_col == col+3? {}".format(curr_col == col+3))
+            upper_row = curr_row-1
+            upper_col = curr_col-1
+            done=True
+    
+    curr_row = upper_row
+    curr_col = upper_col
+
+    # print("top right diag: [{}][{}]".format(upper_col, upper_row))
 
     # add +1 to pos_diag_score for every positively-sloped 4-in-a-row that can potentially occur from given pos
-    while curr_row <= row and curr_row+3 <= upper_row and curr_col <= col and curr_col+3 <= upper_col:
-        if board[curr_row][curr_col] != opponent and board[curr_row+1][curr_col+1] != opponent and board[curr_row+2][curr_col+2] != opponent and board[curr_row+3][curr_col+3] != opponent:
+    # traverse board right->left from upper right diagonal position
+    while curr_row >= row and curr_row-3 >= 0 and curr_col >= col and curr_col-3 >= 0:
+        if board[curr_row][curr_col] != opponent and board[curr_row-1][curr_col-1] != opponent and board[curr_row-2][curr_col-2] != opponent and board[curr_row-3][curr_col-3] != opponent:
             pos_diag_score+=1
+        curr_row-=1
+        curr_col-=1
+
+
+    # reset these values
+    curr_col = col
+    curr_row = row
+
+    # now we determine the lower_col and upper_row values which are used when scoring the postiively-sloped diagonals
+    done = False
+    while not done:
+        curr_col-=1
         curr_row+=1
-        curr_col+=1
+        if curr_col < 0 or curr_row > ROW_COUNT-1 or curr_col == col-4:
+            # print("curr col < 0? {}".format(curr_col < 0))
+            # print("curr_row > ROW_COUNT-1? {}".format(curr_row > ROW_COUNT-1))
+            # print("curr_col == col-3? {}".format(curr_col == col-3))
+            lower_col = curr_col+1
+            upper_row = curr_row-1
+            done=True
 
-
-
-    curr_row = upper_row # want to start at the highest row and move down, since we are looking for negative diagonals
     curr_col = lower_col
-    print("upper_row: {}".format(upper_row))
-    print("lower_col: {}".format(lower_col))
+    curr_row = upper_row # want to start at the highest row and move down, since we are looking for negative diagonals
+    
+    # print("top left diag: [{}][{}]".format(lower_col, upper_row))
+    
 
     # add +1 to neg_diag_score for every negatively-sloped 4-in-a-row that can potentially occur from given pos
-    while curr_row >= row and curr_row-3 >= lower_row and curr_col <= col and curr_col+3 <= upper_col:
-        print("[x][y]==[{}][{}]".format(curr_col, curr_row))
+    # traverse board left->right from upper left position
+    while curr_row >= row and curr_row-3 >= 0 and curr_col <= col and curr_col+3 <= COLUMN_COUNT-1:
+        #print("[x][y]==[{}][{}]".format(curr_col, curr_row))
         if board[curr_row][curr_col] != opponent and board[curr_row-1][curr_col+1] != opponent and board[curr_row-2][curr_col+2] != opponent and board[curr_row-3][curr_col+3] != opponent:
             neg_diag_score+=1
         curr_row-=1
         curr_col+=1
 
-    print("horz: {}".format(horizontal_score))
-    print("vert: {}".format(vertical_score))
-    print("pos diag: {}".format(pos_diag_score))
-    print("neg diag: {}".format(neg_diag_score))
+    #print("horz: {}".format(horizontal_score))
+    #print("vert: {}".format(vertical_score))
+    # print("pos diag: {}".format(pos_diag_score))
+    # print("neg diag: {}".format(neg_diag_score))
 
 
     return horizontal_score + vertical_score + pos_diag_score + neg_diag_score
@@ -576,40 +615,41 @@ def run_game_no_graphics():
 
 
 if __name__ == '__main__':
-    """
-    answer = ""
-    print("Would you like to run the game with graphics? (y/n)")
-    input(answer)
 
     board = create_board()
     b_copy = board.copy()
    # drop_piece(board, 0, 3, 1)
     #print_board(board)
-    drop_piece(b_copy, 0, 3, 1)
+    drop_piece(b_copy, 3, 1)
     print_board(b_copy)
     print(fitness(board, 0, 3, 1))
 
-    drop_piece(b_copy, 0, 2, 1)
+    drop_piece(b_copy, 2, 1)
     print_board(b_copy)
     print(fitness(board, 0, 2, 1))
 
-    drop_piece(b_copy, 0, 1, 1)
+    drop_piece(b_copy, 1, 1)
     print_board(b_copy)
     print(fitness(board, 0, 1, 1))
 
-    drop_piece(b_copy, 0, 0, 1)
+    drop_piece(b_copy, 0, 1)
     print_board(b_copy)
-    print(fitness(board, 0, 0, 1))
+    print(fitness(board,0, 0, 1))
 
-    drop_piece(b_copy, 0, 4, 1)
+    drop_piece(b_copy, 4, 1)
     print_board(b_copy)
     print(fitness(board, 0, 4, 1))
 
-    drop_piece(b_copy, 0, 5, 1)
+    drop_piece(b_copy, 5, 1)
     print_board(b_copy)
     print(fitness(board, 0, 5, 1))
-    """
-    run_game_with_graphics()
+
+    drop_piece(b_copy, 3, 1)
+    print_board(b_copy)
+    print(fitness(board, 0, 3, 1))
+
+    
+    #run_game_with_graphics()
 
 
 
