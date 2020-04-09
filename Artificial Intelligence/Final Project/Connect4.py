@@ -22,20 +22,18 @@ def create_board():
     board = np.zeros((ROW_COUNT, COLUMN_COUNT))
     return board
 
-
-def drop_piece(board, row, col, piece):
-    board[row][col] = piece
-
-
-def is_valid_location(board, col):
-    return board[ROW_COUNT - 1][col] == 0
-
-
 def get_next_open_row(board, col):
     for r in range(ROW_COUNT):
         if board[r][col] == 0:
             return r
 
+def drop_piece(board, col, piece):
+    row = get_next_open_row(board, col)
+    board[row][col] = piece
+
+
+def is_valid_location(board, col):
+    return board[ROW_COUNT - 1][col] == 0
 
 def print_board(board):
     print(np.flip(board, 0))
@@ -159,25 +157,24 @@ def minimax(board, depth, maximizingPlayer):
     # performs minimax algorithm to find best move
     # code based upon pseudocode found here https://en.wikipedia.org/wiki/Minimax
 
-    if is_terminal(board):
-        if winning_move(board, 2):
-            return (0, math.inf)
-        elif winning_move(board, 1):
-            return (0, -math.inf)
-        else:
-            return (0, 0)
-
+    # check for terminal node or depth=0
     if depth == 0:
         return (None, score_position(board, 2))
+    elif winning_move(board, 2):
+        return (0, math.inf)
+    elif winning_move(board, 1):
+        return (0, -math.inf)
+    elif len(get_valid_locations(board)) == 0:
+        return (0,0)
+    
 
     if maximizingPlayer:
         value = -math.inf
         valid = get_valid_locations(board)
-        column = random.choice(valid)
+        column = valid[0]
         for col in valid:
-            row = get_next_open_row(board, col)
             board_copy = board.copy()
-            drop_piece(board_copy, row, col, 2)
+            drop_piece(board_copy, col, 2)
             score = minimax(board_copy, depth-1, False)[1]
             if score > value:
                 value = score
@@ -187,11 +184,10 @@ def minimax(board, depth, maximizingPlayer):
     else:
         value = math.inf
         valid = get_valid_locations(board)
-        column = random.choice(valid)
+        column = valid[0]
         for col in valid:
-            row = get_next_open_row(board, col)
             board_copy = board.copy()
-            drop_piece(board_copy, row, col, 1)
+            drop_piece(board_copy, col, 1)
             score = minimax(board_copy, depth-1, True)[1]
             if score < value:
                 value = score
@@ -201,25 +197,23 @@ def minimax(board, depth, maximizingPlayer):
 
 def expectimax(board, depth, maximizingPlayer):
 
-    if is_terminal(board):
-        if winning_move(board, 2):
-            return (0, math.inf)
-        elif winning_move(board, 1):
-            return (0, -math.inf)
-        else:
-            return (0, 0)
-
+    # check for terminal node or depth=0
     if depth == 0:
         return (None, score_position(board, 2))
+    elif winning_move(board, 2):
+        return (0, math.inf)
+    elif winning_move(board, 1):
+        return (0, -math.inf)
+    elif len(get_valid_locations(board)) == 0:
+        return (0,0)
 
     if maximizingPlayer:
         value = -math.inf
         valid = get_valid_locations(board)
-        column = random.choice(valid)
+        column = 0
         for col in valid:
-            row = get_next_open_row(board, col)
             board_copy = board.copy()
-            drop_piece(board_copy, row, col, 2)
+            drop_piece(board_copy, col, 2)
             score = minimax(board_copy, depth-1, False)[1]
             if score > value:
                 value = score
@@ -229,12 +223,11 @@ def expectimax(board, depth, maximizingPlayer):
     else:
         value = math.inf
         valid = get_valid_locations(board)
-        column = random.choice(valid)
+        column = 0
         nodes = []
         for col in valid:
-            row = get_next_open_row(board, col)
             board_copy = board.copy()
-            drop_piece(board_copy, row, col, 1)
+            drop_piece(board_copy, col, 1)
             score = minimax(board_copy, depth-1, True)[1]
             nodes.append(score)
             if score < value:
@@ -260,9 +253,8 @@ def choose_best_move(board, piece):
     valid_locations = get_valid_locations(board)
 
     for col in valid_locations:
-        row = get_next_open_row(board, col)
         temp_board = board.copy()
-        drop_piece(temp_board, row, col, piece)
+        drop_piece(temp_board, col, piece)
         score = score_position(temp_board, piece)
         if score > best_score:
             best_score = score
@@ -341,8 +333,12 @@ def fitness(board, row, col, piece):
 
     curr_row = upper_row # want to start at the highest row and move down, since we are looking for negative diagonals
     curr_col = lower_col
+    print("upper_row: {}".format(upper_row))
+    print("lower_col: {}".format(lower_col))
+
     # add +1 to neg_diag_score for every negatively-sloped 4-in-a-row that can potentially occur from given pos
     while curr_row >= row and curr_row-3 >= lower_row and curr_col <= col and curr_col+3 <= upper_col:
+        print("[x][y]==[{}][{}]".format(curr_col, curr_row))
         if board[curr_row][curr_col] != opponent and board[curr_row-1][curr_col+1] != opponent and board[curr_row-2][curr_col+2] != opponent and board[curr_row-3][curr_col+3] != opponent:
             neg_diag_score+=1
         curr_row-=1
@@ -474,7 +470,7 @@ def run_game_with_graphics():
     expectimax_wins = 0
     minimax_wins = 0
     tie_games = 0
-    names = ['Expectimax', 'Minimax']
+    names = ['Minimax', 'Expectimax']
 
     # Open the window and set the background
     pygame.init()
@@ -505,7 +501,7 @@ def run_game_with_graphics():
                     col = random.choice(get_valid_locations(board))
                     print("Randomly placing a chip...")
                     row = get_next_open_row(board, col)
-                    drop_piece(board, row, col, 1)
+                    drop_piece(board, col, 1)
                     draw_piece(screen, row, col, 1)
 
                     turn_num += 1
@@ -517,7 +513,7 @@ def run_game_with_graphics():
 
                     if is_valid_location(board, col):
                         row = get_next_open_row(board, col)
-                        drop_piece(board, row, col, 1)
+                        drop_piece(board, col, 1)
                         draw_piece(screen, row, col, 1)
 
                         if winning_move(board, 1):
@@ -534,7 +530,7 @@ def run_game_with_graphics():
                     col = random.choice(get_valid_locations(board))
                     print("Randomly placing a chip...")
                     row = get_next_open_row(board, col)
-                    drop_piece(board, row, col, 2)
+                    drop_piece(board, col, 2)
                     draw_piece(screen, row, col, 2)
 
                     turn_num += 1
@@ -545,7 +541,7 @@ def run_game_with_graphics():
 
                     if is_valid_location(board, col):
                         row = get_next_open_row(board, col)
-                        drop_piece(board, row, col, 2)
+                        drop_piece(board, col, 2)
                         draw_piece(screen, row, col, 2)
 
                         if winning_move(board, 2):
@@ -580,7 +576,7 @@ def run_game_no_graphics():
 
 
 if __name__ == '__main__':
-
+    """
     answer = ""
     print("Would you like to run the game with graphics? (y/n)")
     input(answer)
@@ -597,21 +593,25 @@ if __name__ == '__main__':
     print_board(b_copy)
     print(fitness(board, 0, 2, 1))
 
+    drop_piece(b_copy, 0, 1, 1)
+    print_board(b_copy)
     print(fitness(board, 0, 1, 1))
+
+    drop_piece(b_copy, 0, 0, 1)
+    print_board(b_copy)
     print(fitness(board, 0, 0, 1))
+
+    drop_piece(b_copy, 0, 4, 1)
+    print_board(b_copy)
     print(fitness(board, 0, 4, 1))
+
+    drop_piece(b_copy, 0, 5, 1)
+    print_board(b_copy)
     print(fitness(board, 0, 5, 1))
-
-    #run_game_with_graphics()
-
-
     """
-    
+    run_game_with_graphics()
 
-    if answer == 'y':
-        run_game_with_graphics()
-    else:
-        run_game_no_graphics()
-"""
+
+
 
     
