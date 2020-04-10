@@ -271,8 +271,11 @@ def fitness(board, row, col, piece):
         opponent = 1
 
     # returns -inf if the particle is in a position that is already occupied (by either player)
+    """
     if board[row][col] != 0:
         return -math.inf
+
+    """
 
     # check whether the move is legal by making sure it is not floating in the middle of the board
     i = 1
@@ -340,8 +343,6 @@ def fitness(board, row, col, piece):
     curr_row = upper_row
     curr_col = upper_col
 
-    # print("top right diag: [{}][{}]".format(upper_col, upper_row))
-
     # add +1 to pos_diag_score for every positively-sloped 4-in-a-row that can potentially occur from given pos
     # traverse board right->left from upper right diagonal position
     while curr_row >= row and curr_row-3 >= 0 and curr_col >= col and curr_col-3 >= 0:
@@ -383,8 +384,8 @@ def fitness(board, row, col, piece):
         curr_row-=1
         curr_col+=1
 
-    #print("horz: {}".format(horizontal_score))
-    #print("vert: {}".format(vertical_score))
+    # print("horz: {}".format(horizontal_score))
+    # print("vert: {}".format(vertical_score))
     # print("pos diag: {}".format(pos_diag_score))
     # print("neg diag: {}".format(neg_diag_score))
 
@@ -402,7 +403,8 @@ def PSO(board, piece):
     population_size = 40
     max_generation = 250
     gbest = -math.inf  # the particle with the best fitness value out of the population
-    # the best solution (fitness) that has been achieved so far (fitness val also stored)
+
+    # the best solution (fitness) that has been achieved thus far (fitness val also stored)
     pbest = None
     particles = []
     board_copy = board.copy()
@@ -617,36 +619,7 @@ def run_game_no_graphics():
 if __name__ == '__main__':
 
     board = create_board()
-    b_copy = board.copy()
-   # drop_piece(board, 0, 3, 1)
-    #print_board(board)
-    drop_piece(b_copy, 3, 1)
-    print_board(b_copy)
-    print(fitness(board, 0, 3, 1))
 
-    drop_piece(b_copy, 2, 1)
-    print_board(b_copy)
-    print(fitness(board, 0, 2, 1))
-
-    drop_piece(b_copy, 1, 1)
-    print_board(b_copy)
-    print(fitness(board, 0, 1, 1))
-
-    drop_piece(b_copy, 0, 1)
-    print_board(b_copy)
-    print(fitness(board,0, 0, 1))
-
-    drop_piece(b_copy, 4, 1)
-    print_board(b_copy)
-    print(fitness(board, 0, 4, 1))
-
-    drop_piece(b_copy, 5, 1)
-    print_board(b_copy)
-    print(fitness(board, 0, 5, 1))
-
-    drop_piece(b_copy, 3, 1)
-    print_board(b_copy)
-    print(fitness(board, 0, 3, 1))
 
     
     #run_game_with_graphics()
