@@ -141,7 +141,7 @@ def evaluate_pos(board, player):
     # find the number of horizontal 
     
 
-
+"""
 def is_terminal(board):
     if winning_move(board, 1):
         return True
@@ -151,7 +151,7 @@ def is_terminal(board):
         return True
     else:
         return False
-
+"""
 
 def minimax(board, depth, maximizingPlayer):
     # performs minimax algorithm to find best move
@@ -264,11 +264,25 @@ def choose_best_move(board, piece):
 
 def fitness(board, row, col, piece):
     # returns the fitness score of a particle at a given position
-    # fitness score is the number of potential 4-in-a-rows that can occur from the given particle's position
 
     opponent = 2
     if piece == 2:
         opponent = 1
+
+    extra_points = 0
+
+    # check whether placing a piece in this position will win the game
+    board_copy = board.copy()
+    drop_piece(board_copy, col, piece)
+    if winning_move(board_copy, piece):
+        extra_points+=200
+
+    # check whether this position will stop the opponent from winning
+    board_copy = board.copy()
+    drop_piece(board_copy, col, opponent)
+    if winning_move(board_copy, opponent):
+        extra_points+=250
+    
 
     # returns -inf if the particle is in a position that is already occupied (by either player)
     """
@@ -390,7 +404,7 @@ def fitness(board, row, col, piece):
     # print("neg diag: {}".format(neg_diag_score))
 
 
-    return horizontal_score + vertical_score + pos_diag_score + neg_diag_score
+    return horizontal_score + vertical_score + pos_diag_score + neg_diag_score + extra_points
 
 
 def PSO(board, piece):
@@ -622,7 +636,7 @@ if __name__ == '__main__':
 
 
     
-    #run_game_with_graphics()
+    run_game_with_graphics()
 
 
 
