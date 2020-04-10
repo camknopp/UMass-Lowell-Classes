@@ -262,7 +262,7 @@ def choose_best_move(board, piece):
 
     return best_col
 
-def fitness(board, row, col, piece):
+def fitness(board, pos, piece):
     # returns the fitness score of a particle at a given position
 
     opponent = 2
@@ -270,12 +270,14 @@ def fitness(board, row, col, piece):
         opponent = 1
 
     extra_points = 0
+    row = pos[0]
+    col = pos[1]
 
     # check whether placing a piece in this position will win the game
     board_copy = board.copy()
     drop_piece(board_copy, col, piece)
     if winning_move(board_copy, piece):
-        extra_points+=200
+        extra_points+=250
 
     # check whether this position will stop the opponent from winning
     board_copy = board.copy()
@@ -285,11 +287,9 @@ def fitness(board, row, col, piece):
     
 
     # returns -inf if the particle is in a position that is already occupied (by either player)
-    """
+    
     if board[row][col] != 0:
         return -math.inf
-
-    """
 
     # check whether the move is legal by making sure it is not floating in the middle of the board
     i = 1
@@ -347,9 +347,6 @@ def fitness(board, row, col, piece):
         curr_col+=1
         curr_row+=1
         if curr_col > COLUMN_COUNT-1 or curr_row > ROW_COUNT-1 or curr_col == col+4:
-            # print("curr_col > COLUMN_COUNT-1? {}".format(curr_col > COLUMN_COUNT-1))
-            # print("curr_row > ROW_COUNT-1? {}".format(curr_row > ROW_COUNT-1))
-            # print("curr_col == col+3? {}".format(curr_col == col+3))
             upper_row = curr_row-1
             upper_col = curr_col-1
             done=True
@@ -376,9 +373,6 @@ def fitness(board, row, col, piece):
         curr_col-=1
         curr_row+=1
         if curr_col < 0 or curr_row > ROW_COUNT-1 or curr_col == col-4:
-            # print("curr col < 0? {}".format(curr_col < 0))
-            # print("curr_row > ROW_COUNT-1? {}".format(curr_row > ROW_COUNT-1))
-            # print("curr_col == col-3? {}".format(curr_col == col-3))
             lower_col = curr_col+1
             upper_row = curr_row-1
             done=True
@@ -386,9 +380,6 @@ def fitness(board, row, col, piece):
     curr_col = lower_col
     curr_row = upper_row # want to start at the highest row and move down, since we are looking for negative diagonals
     
-    # print("top left diag: [{}][{}]".format(lower_col, upper_row))
-    
-
     # add +1 to neg_diag_score for every negatively-sloped 4-in-a-row that can potentially occur from given pos
     # traverse board left->right from upper left position
     while curr_row >= row and curr_row-3 >= 0 and curr_col <= col and curr_col+3 <= COLUMN_COUNT-1:
@@ -398,59 +389,66 @@ def fitness(board, row, col, piece):
         curr_row-=1
         curr_col+=1
 
-    # print("horz: {}".format(horizontal_score))
-    # print("vert: {}".format(vertical_score))
-    # print("pos diag: {}".format(pos_diag_score))
-    # print("neg diag: {}".format(neg_diag_score))
-
-
     return horizontal_score + vertical_score + pos_diag_score + neg_diag_score + extra_points
 
 
 def PSO(board, piece):
-    # based around pseudocode found here http://www.cleveralgorithms.com/nature-inspired/swarm/pso.html
-
+    # based around pseudocode found here https://en.wikipedia.org/wiki/Particle_swarm_optimization
+   
     c1 = 2
     c2 = 2
     r1 = np.random.random()
     r2 = np.random.random()
+    b_copy = board.copy()
     population_size = 40
-    max_generation = 250
-    gbest = -math.inf  # the particle with the best fitness value out of the population
+    max_generation = 200
+    swarm = []
 
-    # the best solution (fitness) that has been achieved thus far (fitness val also stored)
-    pbest = None
-    particles = []
-    board_copy = board.copy()
-
-    # after finding gbest and pbest, the particle updates its velocity and positions with..
-    # ... v[i] = v[i] + c1 * rand() * (pbest[] - persent + c2 * rand(0,1)) * (gbest[] - present[]) ( a)
 
     for i in range(population_size):
-        p_coord = (random.choice(range(ROW_COUNT)),
+        p_curr_coord = (random.choice(range(ROW_COUNT)),
                    random.choice(range(COLUMN_COUNT)))
+        p_best_coord = (0, 0)
         p_veloc = (np.random.random(), np.random.random())
-        p_fitness = fitness(board, piece, p_coord[0], p_coord[1])
-        particles.append((p_coord, p_veloc, p_fitness))
-        if p_fitness > pbest:
-            pass
+        if fitness(p_curr_coord, b_copy) > fitness(p_best_coord, b_copy):
+            p_best_coord = p_curr_coord
+
+        swarm.append((p_curr_coord, p_best_coord, p_veloc))
+    
+    gbest = swarm[0][0] # set gbest arbitrarily to the first particle's coordinates
+
 
     for i in range(max_generation):
-        pbest = 0
-        gbest = None
-
         for j in range(population_size):
-            p_fitness = particles[j][2]
-            if p_fitness > pbest:
-                pbest = p_fitness
-                gbest = particles[j].copy()
+            p = swarm[j]
 
-        for j in range(population_size):
+            # adjust the particles current position using it's velocity
             for k in range(2):
-                pass
-               # particles[j][1][k] = particles[j][1][k] + c1*r1*(particle)
+               # p[2][k] = p[2][k] * c1 * r1 * (p[1][k] - p[0][k]) + c2 * r2 * (gbest[k] - p[0][k])
+                p[2][k] = math.floor(p[2][k] * c1 * r1 * (p[1][k] - p[0][k]) + c2 * r2 * (gbest[k] - p[0][k]))
+                p[0][k] += p[2][k]
 
-    return
+            # make sure the particle's position coordinates are within the board's dimensions
+            if p[0][0] > ROW_COUNT-1:
+                p[0][0] = ROW_COUNT-1
+            elif p[0][0] < 0:
+                p[0][0] = 0
+
+            if p[0][1] > COLUMN_COUNT-1:
+                p[0][1] = COLUMN_COUNT-1
+            elif p[0][1] < 0:
+                p[0][1] = 0
+
+
+            # check whether the particle's current position is it's best position thus far
+            if fitness(p[0], b_copy) > fitness(p[1], b_copy):
+                p[1] = p[0]
+                # check whether the particle's current position is the global best for the swarm thus far
+                if fitness(p[0], b_copy) > fitness(gbest, b_copy):
+                    gbest = p[0]
+            swarm[j] = p
+
+    return gbest # return the global best coordinate of the swarm
 
 
 def draw_piece(screen, row, col, piece):
