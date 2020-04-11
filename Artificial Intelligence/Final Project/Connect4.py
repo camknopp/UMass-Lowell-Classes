@@ -393,14 +393,12 @@ def PSO(board, piece):
     max_generation = 200
     swarm = []
 
-
+    # initialize particle swarm
     for i in range(population_size):
         p_curr_coord = [random.choice(range(ROW_COUNT)),
                    random.choice(range(COLUMN_COUNT))]
-        p_best_coord = [0, 0]
+        p_best_coord = p_curr_coord.copy()
         p_veloc = [np.random.random(), np.random.random()]
-        if fitness(b_copy, p_curr_coord,  piece) > fitness(b_copy, p_best_coord, piece):
-            p_best_coord = p_curr_coord
 
         swarm.append([p_curr_coord, p_best_coord, p_veloc])
     
@@ -413,8 +411,8 @@ def PSO(board, piece):
 
             # adjust the particles current position using it's velocity
             for k in range(2):
-                p[2][k] = p[2][k] * c1 * r1 * (p[1][k] - p[0][k]) + c2 * r2 * (gbest[k] - p[0][k])
-                print(p[2][k])
+                p[2][k] = math.ceil(p[2][k] + c1 * r1 * (p[1][k] - p[0][k]) + c2 * r2 * (gbest[k] - p[0][k]))
+                print("p[2][{}]: {}".format(k, p[2][k]))
                 #p[2][k] = math.floor(p[2][k] * c1 * r1 * (p[1][k] - p[0][k]) + c2 * r2 * (gbest[k] - p[0][k]))
                 #print("p[2][{}]: {}".format(k, p[2][k]))
                 p[0][k] += p[2][k]
@@ -433,10 +431,10 @@ def PSO(board, piece):
 
             # check whether the particle's current position is it's best position thus far
             if fitness(b_copy, p[0], piece) > fitness(b_copy, p[1], piece):
-                p[1] = p[0]
+                p[1] = p[0].copy()
                 # check whether the particle's current position is the global best for the swarm thus far
-                if fitness(b_copy, p[0], piece) > fitness(b_copy, gbest, piece):
-                    gbest = p[0]
+                if fitness(b_copy, p[1], piece) > fitness(b_copy, gbest, piece):
+                    gbest = p[1].copy()
             swarm[j] = p
 
     return gbest # return the global best coordinate of the swarm
