@@ -251,40 +251,46 @@ def choose_best_move(board, piece):
 
 def fitness(board, pos, piece):
     # returns the fitness score of a particle at a given position
-
-    opponent = 2
-    if piece == 2:
-        opponent = 1
-
-    extra_points = 0
     row = pos[0]
     col = pos[1]
 
-    # check whether placing a piece in this position will win the game
-    board_copy = board.copy()
-    drop_piece(board_copy, col, piece)
-    if winning_move(board_copy, piece):
-        extra_points+=250
-
-    # check whether this position will stop the opponent from winning
-    board_copy = board.copy()
-    drop_piece(board_copy, col, opponent)
-    if winning_move(board_copy, opponent):
-        extra_points+=250
-    
-
-    # returns -inf if the particle is in a position that is already occupied (by either player)
-    
+    # make sure that the position is onoccupied
     if board[row][col] != 0:
         return -math.inf
 
-    # check whether the move is legal by making sure it is not floating in the middle of the board
+    # check whether the move is legal by making sure it is not floating above empty space
     i = 1
     while i <= row:
         if board[row-i][col] == 0:
             return -math.inf
         i += 1
 
+    opponent = 2
+    if piece == 2:
+        opponent = 1
+
+    extra_points = 0
+    
+
+    # check whether placing a piece in this position will win the game
+    board_copy = board.copy()
+    drop_piece(board_copy, col, piece)
+    if winning_move(board_copy, piece):
+        return math.inf
+    else:
+        if get_next_open_row(board_copy, col) is not None:
+            drop_piece(board_copy, col, opponent)
+            if winning_move(board_copy, opponent):
+                return -math.inf# dropping this piece will set the opponent up for a win, which we don't want
+
+    # check whether this position will stop the opponent from winning
+    board_copy = board.copy()
+    drop_piece(board_copy, col, opponent)
+    if winning_move(board_copy, opponent):
+        return math.inf
+    
+        
+    
     horizontal_score = 0
     vertical_score = 0
     pos_diag_score = 0
@@ -306,6 +312,10 @@ def fitness(board, pos, piece):
         if board[row][curr_col] != opponent and board[row][curr_col+1] != opponent and board[row][curr_col+2] != opponent and board[row][curr_col+3] != opponent:
             horizontal_score+=1
         curr_col+=1
+
+    if col+1 < COLUMN_COUNT and col-1 >= 0:
+        if board[row][col+1] == opponent and board[row][col-1] == opponent:
+            extra_points+=10 # give extra points for this position because it prevents the opponent from getting 3 in a row horizontally
 
     # get the lower and upper bounds for rows for a 4-in-a-row vertical win from curr position
     lower_row = row - 3
@@ -385,11 +395,9 @@ def PSO(board, piece):
     c1 = 2
     c2 = 2
     r1 = np.random.random()
-    print("r1 {}".format(r1))
     r2 = np.random.random()
-    print("r1 {}".format(r2))
     b_copy = board.copy()
-    population_size = 40
+    population_size = 50
     max_generation = 200
     swarm = []
 
@@ -397,7 +405,8 @@ def PSO(board, piece):
     for i in range(population_size):
         p_curr_coord = [random.choice(range(ROW_COUNT)),
                    random.choice(range(COLUMN_COUNT))]
-        p_best_coord = p_curr_coord.copy()
+        p_best_coord = [random.choice(range(ROW_COUNT)),
+                   random.choice(range(COLUMN_COUNT))]
         p_veloc = [np.random.random(), np.random.random()]
 
         swarm.append([p_curr_coord, p_best_coord, p_veloc])
@@ -409,11 +418,9 @@ def PSO(board, piece):
         for j in range(population_size):
             p = swarm[j]
 
-            # adjust the particles current position using it's velocity
+            # adjust the particle's current position using its velocity
             for k in range(2):
-                p[2][k] = math.ceil(p[2][k] + c1 * r1 * (p[1][k] - p[0][k]) + c2 * r2 * (gbest[k] - p[0][k]))
-                print("p[2][{}]: {}".format(k, p[2][k]))
-                #p[2][k] = math.floor(p[2][k] * c1 * r1 * (p[1][k] - p[0][k]) + c2 * r2 * (gbest[k] - p[0][k]))
+                p[2][k] = math.floor(p[2][k] + c1 * r1 * (p[1][k] - p[0][k]) + c2 * r2 * (gbest[k] - p[0][k]))
                 #print("p[2][{}]: {}".format(k, p[2][k]))
                 p[0][k] += p[2][k]
 
@@ -508,7 +515,7 @@ def run_game_with_graphics():
     expectimax_wins = 0
     minimax_wins = 0
     tie_games = 0
-    names = ['Minimax', 'Expectimax']
+    names = ['PSO', 'Random']
 
     # Open the window and set the background
     pygame.init()
@@ -548,7 +555,7 @@ def run_game_with_graphics():
                     # col = int(input("Player 1 Make your Selection (1-7): "))
                     #col, score = minimax(board, 4, True)
                     col = PSO(board, 1)[1]
-                    print("minimax chooses column {}".format(col))
+                    print("pso chooses column {}".format(col))
 
                     if is_valid_location(board, col):
                         row = get_next_open_row(board, col)
@@ -575,8 +582,9 @@ def run_game_with_graphics():
                     turn_num += 1
                 else:
                     #col, score = minimax(board, 4, True)
-                    col, score = expectimax(board, 4, True)
-                    print("expectimax chooses column {}".format(col))
+                    #col, score = expectimax(board, 4, True)
+                    col = random.choice(get_valid_locations(board))
+                    print("random chooses column {}".format(col))
 
                     if is_valid_location(board, col):
                         row = get_next_open_row(board, col)
