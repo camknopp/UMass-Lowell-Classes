@@ -140,19 +140,6 @@ def evaluate_pos(board, player):
 
     # find the number of horizontal 
     
-
-"""
-def is_terminal(board):
-    if winning_move(board, 1):
-        return True
-    elif winning_move(board, 2):
-        return True
-    elif len(get_valid_locations(board)) == 0:
-        return True
-    else:
-        return False
-"""
-
 def minimax(board, depth, maximizingPlayer):
     # performs minimax algorithm to find best move
     # code based upon pseudocode found here https://en.wikipedia.org/wiki/Minimax
@@ -398,7 +385,9 @@ def PSO(board, piece):
     c1 = 2
     c2 = 2
     r1 = np.random.random()
+    print("r1 {}".format(r1))
     r2 = np.random.random()
+    print("r1 {}".format(r2))
     b_copy = board.copy()
     population_size = 40
     max_generation = 200
@@ -406,14 +395,14 @@ def PSO(board, piece):
 
 
     for i in range(population_size):
-        p_curr_coord = (random.choice(range(ROW_COUNT)),
-                   random.choice(range(COLUMN_COUNT)))
-        p_best_coord = (0, 0)
-        p_veloc = (np.random.random(), np.random.random())
-        if fitness(p_curr_coord, b_copy) > fitness(p_best_coord, b_copy):
+        p_curr_coord = [random.choice(range(ROW_COUNT)),
+                   random.choice(range(COLUMN_COUNT))]
+        p_best_coord = [0, 0]
+        p_veloc = [np.random.random(), np.random.random()]
+        if fitness(b_copy, p_curr_coord,  piece) > fitness(b_copy, p_best_coord, piece):
             p_best_coord = p_curr_coord
 
-        swarm.append((p_curr_coord, p_best_coord, p_veloc))
+        swarm.append([p_curr_coord, p_best_coord, p_veloc])
     
     gbest = swarm[0][0] # set gbest arbitrarily to the first particle's coordinates
 
@@ -424,8 +413,10 @@ def PSO(board, piece):
 
             # adjust the particles current position using it's velocity
             for k in range(2):
-               # p[2][k] = p[2][k] * c1 * r1 * (p[1][k] - p[0][k]) + c2 * r2 * (gbest[k] - p[0][k])
-                p[2][k] = math.floor(p[2][k] * c1 * r1 * (p[1][k] - p[0][k]) + c2 * r2 * (gbest[k] - p[0][k]))
+                p[2][k] = p[2][k] * c1 * r1 * (p[1][k] - p[0][k]) + c2 * r2 * (gbest[k] - p[0][k])
+                print(p[2][k])
+                #p[2][k] = math.floor(p[2][k] * c1 * r1 * (p[1][k] - p[0][k]) + c2 * r2 * (gbest[k] - p[0][k]))
+                #print("p[2][{}]: {}".format(k, p[2][k]))
                 p[0][k] += p[2][k]
 
             # make sure the particle's position coordinates are within the board's dimensions
@@ -441,10 +432,10 @@ def PSO(board, piece):
 
 
             # check whether the particle's current position is it's best position thus far
-            if fitness(p[0], b_copy) > fitness(p[1], b_copy):
+            if fitness(b_copy, p[0], piece) > fitness(b_copy, p[1], piece):
                 p[1] = p[0]
                 # check whether the particle's current position is the global best for the swarm thus far
-                if fitness(p[0], b_copy) > fitness(gbest, b_copy):
+                if fitness(b_copy, p[0], piece) > fitness(b_copy, gbest, piece):
                     gbest = p[0]
             swarm[j] = p
 
@@ -472,10 +463,6 @@ def draw_board(board, screen):
 
             pygame.draw.circle(screen, (255, 255, 255), (x, y), 10, 3)
     pygame.display.update()
-
-
-def game_with_graphics():
-    pass
 
 
 def draw_menu(screen):
@@ -561,7 +548,8 @@ def run_game_with_graphics():
                 else:
                     # while (col is None or col > 7 or col < 1 or not is_valid_location(board, col-1)):
                     # col = int(input("Player 1 Make your Selection (1-7): "))
-                    col, score = minimax(board, 4, True)
+                    #col, score = minimax(board, 4, True)
+                    col = PSO(board, 1)[1]
                     print("minimax chooses column {}".format(col))
 
                     if is_valid_location(board, col):
@@ -629,9 +617,6 @@ def run_game_no_graphics():
 
 
 if __name__ == '__main__':
-
-    board = create_board()
-
 
     
     run_game_with_graphics()
