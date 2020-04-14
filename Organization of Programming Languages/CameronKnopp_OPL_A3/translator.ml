@@ -82,9 +82,9 @@ and ast_ize_SL (sl:parse_tree) : ast_sl =
 (*
 your code here ...
 *)
-    | PT_nt("SL", [statement; statement_list])
-          -> (ast_ize_S statement)::(ast_ize_SL statement_list)
-    | _ -> raise (Failure "malformed parse tree in ast_ize_SL")
+  | PT_nt("SL", [statement; statement_list])
+        -> (ast_ize_S statement)::(ast_ize_SL statement_list)
+  | _ -> raise (Failure "malformed parse tree in ast_ize_SL")
 
 and ast_ize_S (s:parse_tree) : ast_s =
   match s with
@@ -93,17 +93,17 @@ and ast_ize_S (s:parse_tree) : ast_s =
 (*
 your code here ...
 *)
-    | PT_nt ("S", [PT_term "read"; PT_id rhs])
-        -> AST_read(rhs)
-    | PT_nt ("S", [PT_term "write"; expr])
-        -> AST_write(ast_ize_expr expr)
+  | PT_nt ("S", [PT_term "read"; PT_id rhs])
+      -> AST_read(rhs)
+  | PT_nt ("S", [PT_term "write"; expr])
+      -> AST_write(ast_ize_expr expr)
   | PT_nt ("S", [PT_term "if"; relation ; statement_list; PT_term "fi"])
         -> AST_if (ast_ize_expr relation, ast_ize_SL statement_list)
   | PT_nt ("S", [PT_term "do"; statement_list ; PT_term "od"])
         -> AST_do (ast_ize_SL statement_list)
   | PT_nt ("S", [PT_term "check"; relation])
         -> AST_check (ast_ize_expr relation)
-    | _ -> raise (Failure "malformed parse tree in ast_ize_S")
+  | _ -> raise (Failure "malformed parse tree in ast_ize_S")
 
 and ast_ize_expr (e:parse_tree) : ast_e =
   (* e is an R, E, T, or F parse tree node *)
@@ -111,10 +111,10 @@ and ast_ize_expr (e:parse_tree) : ast_e =
 (*
 your code here ...
 *)
-    | PT_nt ("R", [expr; expr_tail])
-        -> ast_ize_reln_tail (ast_ize_expr(expr)) (expr_tail)
-    | PT_nt ("E", [term; term_tail])
-        -> ast_ize_expr_tail (ast_ize_expr(term)) (term_tail)
+  | PT_nt ("R", [expr; expr_tail])
+      -> ast_ize_reln_tail (ast_ize_expr(expr)) (expr_tail)
+  | PT_nt ("E", [term; term_tail])
+      -> ast_ize_expr_tail (ast_ize_expr(term)) (term_tail)
   | PT_nt ("T", [factor; factor_tail])
         -> ast_ize_expr_tail (ast_ize_expr(factor)) (factor_tail)
   | PT_nt ("F", [PT_id id])
@@ -123,7 +123,7 @@ your code here ...
         -> AST_num (num)
   | PT_nt ("F", [PT_term "("; expr ; PT_term ")"])
         -> ast_ize_expr (expr)
-    | _ -> raise (Failure "malformed parse tree in ast_ize_expr")
+  | _ -> raise (Failure "malformed parse tree in ast_ize_expr")
 
 and ast_ize_reln_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
   (* lhs is an inherited attribute.
@@ -132,9 +132,9 @@ and ast_ize_reln_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
 (*
 your code here ...
 *)
-    | PT_nt ("ET", []) -> lhs
-    | PT_nt ("ET", [PT_nt(ro, [PT_term operator]); expr]) -> AST_binop (operator, lhs, ast_ize_expr(expr))
-    | _ -> raise (Failure "malformed parse tree in ast_ize_reln_tail")
+  | PT_nt ("ET", []) -> lhs
+  | PT_nt ("ET", [PT_nt(ro, [PT_term operator]); expr]) -> AST_binop (operator, lhs, ast_ize_expr(expr))
+  | _ -> raise (Failure "malformed parse tree in ast_ize_reln_tail")
 
 and ast_ize_expr_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
   (* lhs is an inherited attribute.
@@ -143,13 +143,13 @@ and ast_ize_expr_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
 (*
 your code here ...
 *)
-    | PT_nt ("TT", []) -> lhs
-    | PT_nt ("FT", []) -> lhs
-    | PT_nt ("TT", [PT_nt (ao, [PT_term operator]); term; term_tail])
-        -> AST_binop (operator, lhs, (ast_ize_expr_tail(ast_ize_expr(term)) term_tail))
-    | PT_nt ("FT", [PT_nt (mo, [PT_term operator]); factor; factor_tail])
-        -> AST_binop (operator, lhs, (ast_ize_expr_tail(ast_ize_expr(factor)) factor_tail))
-    | _ -> raise (Failure "malformed parse tree in ast_ize_expr_tail")
+  | PT_nt ("TT", []) -> lhs
+  | PT_nt ("FT", []) -> lhs
+  | PT_nt ("TT", [PT_nt (ao, [PT_term operator]); term; term_tail])
+      -> AST_binop (operator, lhs, (ast_ize_expr_tail(ast_ize_expr(term)) term_tail))
+  | PT_nt ("FT", [PT_nt (mo, [PT_term operator]); factor; factor_tail])
+      -> AST_binop (operator, lhs, (ast_ize_expr_tail(ast_ize_expr(factor)) factor_tail))
+  | _ -> raise (Failure "malformed parse tree in ast_ize_expr_tail")
 ;;
 
 
@@ -164,182 +164,182 @@ your code here ...
    indicating their names and the lines on which the writes occur. Your
    C program should contain code to check for dynamic semantic errors. *)
 
+let rec translate (ast:ast_sl) 
+:  string *  string = 
+  let t1, t2, t3 = translate_sl ast [] [] in
+  ("WARNING - The following variables were declared but never used: "^(warning t1 t2) ^ "\n", out^t3^"}\n")
 
-   let out = "
+and translate_sl (ast:ast_sl) (terms:string list) (used: string list):  string list * string list *  string = 
+  match ast with 
+  | head :: tail -> 
+  let t1, t2,t3 = translate_s head terms used in
+  let t4, t5, t6 = translate_sl tail t1 t2 in
+  (t4, t5, t3 ^ t6)
+  | _ -> (terms,used, "")
 
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <string.h>
+and translate_s (ast:ast_s) (terms:string list) (used: string list):  string list * string list *  string = 
+  match ast with
+  | AST_assign id_e-> translate_assign ast terms used
+  | AST_read id -> translate_read ast terms used
+  | AST_write e -> translate_write ast terms used
+  | AST_if e_sl-> translate_if ast terms used
+  | AST_do sl -> translate_do ast terms used
+  | AST_check e -> translate_check ast terms used
+  | _ -> raise (Failure "translate_s ")
 
-    int array[100];
-    char* string[100];
+and translate_assign (ast:ast_s) (terms:string list) (used: string list):  string list * string list *  string = 
+  match ast with
+  | AST_assign (id, e) -> 
+    let t1, t2, t3 = translate_expr e terms used in
+    let db2 = if mem id terms then terms else id::terms in
+    (db2, t2, "setvar(" ^ "\"" ^id ^ "\", " ^ t3 ^ ");\n")
+  | _ -> raise (Failure "translate_assign ")
 
-    int getint() 
-     {
-      char str[100];
-      int n = scanf(\"%s\", str);
-      if(n != 1)
-         {
-        printf(\"Unexpected end of input!\\n\");
-        exit(1);
-         }
-     else{
-        for(int k = 0; str[k]!='\\0' ; k++)
-          {
-          if(str[k] >'9' || str[k] <'0')
-            {
-            printf(\"non numeric input!\\n\");
-            exit(1);
-            }
-          }
-        return atoi(str);
-         }
-     }
-    void putint(int n) 
-    {
-      printf(\"%d\\n\", n);
-    }
-    
-    int divide (int a, int b)
-   {
-      if(b == 0)
-      {
-        printf(\"A division by zero error!\\n\");
-        exit(1);
-      }
-      return a/b ;
-    }
-    
-    int getvar(char* a)
-      {
-      for(int i = 0; string [i] != 0;i++)
-        {
-        if(!strcmp(string[i],a)){
-          return array[i];
-        }
-      }
-      printf(\"Use of uninitialized variable %s\\n\", a);
-      exit (1);
-    }
-    int setvar(char* a, int n)
-      {
-      int i;
-      for(i = 0; string [i] != 0;i++)
-        {
-        if(!strcmp(string[i],a)){
-          array[i] = n;
-          return 1;
-        }
-      }
-      string[i] = a;
-      array[i] = n; 
-      return 0;
-    }
-    
-    int main(int argc, char* argv[]) 
-    {
-     int a; a = getint();
-     int b; b = getint();
-     int sum; sum = a + b;
-     putint (sum);
-     putint (sum/2);
-     return 0;
-    }
-    ";;
+and translate_read (ast:ast_s) (terms:string list) (used: string list):  string list * string list *  string = 
+  match ast with
+  | AST_read id-> let db2 = if mem id terms then terms else id::terms in
+  (db2, used, "setvar(" ^ "\"" ^id ^ "\", getint()); \n")
+  | _ -> raise (Failure "translate_read ")
 
+and translate_write (ast:ast_s) (terms:string list) (used: string list):  string list * string list *  string = 
+  match ast with
+  | AST_write e -> 
+    let t1, t2, t3 = translate_expr e terms used in
+    (t1, t2, "putint(" ^ t3 ^ ");\n")
+  | _ -> raise (Failure "translate_write ")
 
-let rec warning (db:string list) (used: string list) : string =
-  match db with
+and translate_if (ast:ast_s) (terms:string list) (used: string list):  string list * string list *  string = 
+  match ast with
+  | AST_if (e, sl) -> 
+    let t1, t2, t3 = translate_expr e terms used in
+    let t4, t5, t6 = translate_sl sl t1 t2 in
+    ( t4, t5, "if (" ^ t3 ^ ")\n {\n" ^ t6 ^ "}\n")
+  | _ -> raise (Failure "translate_if ")
+
+and translate_do (ast:ast_s) (terms:string list) (used: string list):  string list * string list *  string = 
+  match ast with
+  | AST_do sl -> 
+    let t1, t2, t3 = translate_sl sl terms used in
+    (t1, t2, "while (1) {" ^ t3 ^ "}\n")
+  | _ -> raise (Failure "translate_do ")
+
+and translate_check (ast:ast_s) (terms:string list) (used: string list):  string list * string list *  string = 
+  match ast with
+  | AST_check e -> 
+    let t1, t2, t3 = translate_expr e terms used in
+    (t1, t2, "if(!(" ^ t3 ^ ")) break;\n")
+  | _ -> raise (Failure "translate_check")
+
+and translate_expr (ast:ast_e) (terms:string list) (used: string list):  string list * string list *  string = 
+  match ast with
+  | AST_binop ("/", e1, e2) -> 
+    let t1, t2, t3 = translate_expr e1 terms used in
+    let t4, t5, t6 = translate_expr e2 t1 t2 in
+    (t4, t5, "divide(" ^ t3 ^ ", " ^ t6 ^ ") ")
+  | AST_binop (op, e1, e2 )-> 
+    let t1, t2, t3 = translate_expr e1 terms used in
+    let t4, t5, t6 = translate_expr e2 t1 t2 in
+    (t4, t5, t3 ^ op ^ t6)
+  | AST_id id -> 
+    let used = if mem id terms then id::used else used in
+    (terms, used, "getvar( \"" ^ id ^ "\"" ^ ")")
+  | AST_num num -> (terms, used, num);;
+ 
+let rec warning (terms:string list) (used: string list) : string =
+  match terms with
   | head :: tail-> if mem head used then warning tail used else head^ " " ^ (warning tail used)
   | _ -> "";;
   
-let rec translate (ast:ast_sl) 
-:  string *  string = 
-  let tpl1, tpl2, tpl3 = translate_sl ast [] [] in
-  ("Warning: you have declared but not used the following variable(s): "^(warning tpl1 tpl2) ^ "\n", out^tpl3^"}\n")
 
-and translate_sl (ast:ast_sl) (db:string list) (used: string list):  string list * string list *  string = 
-  match ast with 
-  | head :: tail -> 
-  let tpl1, tpl2,tpl3 = translate_s head db used in
-  let tpl4, tpl5, tpl6 = translate_sl tail tpl1 tpl2 in
-  (tpl4, tpl5, tpl3 ^ tpl6)
-  | _ -> (db,used, "")
+let out = "
 
-and translate_s (ast:ast_s) (db:string list) (used: string list):  string list * string list *  string = 
-  match ast with
-  | AST_assign id_e-> translate_assign ast db used
-  | AST_read id -> translate_read ast db used
-  | AST_write e -> translate_write ast db used
-  | AST_if e_sl-> translate_if ast db used
-  | AST_do sl -> translate_do ast db used
-  | AST_check e -> translate_check ast db used
-  | _ -> raise (Failure "Translate s ")
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-and translate_assign (ast:ast_s) (db:string list) (used: string list):  string list * string list *  string = 
-  match ast with
-  | AST_assign (id, e) -> 
-    let tpl1, tpl2, tpl3 = translate_expr e db used in
-    let db2 = if mem id db then db else id::db in
-    (db2, tpl2, "setvar(" ^ "\"" ^id ^ "\", " ^ tpl3 ^ ");\n")
-  | _ -> raise (Failure "Translate assign ")
+int array[100];
+char* string[100];
 
-and translate_read (ast:ast_s) (db:string list) (used: string list):  string list * string list *  string = 
-  match ast with
-  | AST_read id-> let db2 = if mem id db then db else id::db in
-  (db2, used, "setvar(" ^ "\"" ^id ^ "\", getint()); \n")
-  | _ -> raise (Failure "Translate read ")
+int getint() 
+  {
+  char str[100];
+  int n = scanf(\"%s\", str);
+  if(n != 1)
+      {
+    printf(\"Unexpected end of input!\\n\");
+    exit(1);
+      }
+  else{
+    for(int k = 0; str[k]!='\\0' ; k++)
+      {
+      if(str[k] >'9' || str[k] <'0')
+        {
+        printf(\"non numeric input!\\n\");
+        exit(1);
+        }
+      }
+    return atoi(str);
+      }
+  }
+void putint(int n) 
+{
+  printf(\"%d\\n\", n);
+}
 
-and translate_write (ast:ast_s) (db:string list) (used: string list):  string list * string list *  string = 
-  match ast with
-  | AST_write e -> 
-    let tpl1, tpl2, tpl3 = translate_expr e db used in
-    (tpl1, tpl2, "putint(" ^ tpl3 ^ ");\n")
-  | _ -> raise (Failure "Translate write ")
+int divide (int a, int b)
+{
+  if(b == 0)
+  {
+    printf(\"A division by zero error!\\n\");
+    exit(1);
+  }
+  return a/b ;
+}
 
-and translate_if (ast:ast_s) (db:string list) (used: string list):  string list * string list *  string = 
-  match ast with
-  | AST_if (e, sl) -> 
-    let tpl1, tpl2, tpl3 = translate_expr e db used in
-    let tpl4, tpl5, tpl6 = translate_sl sl tpl1 tpl2 in
-    ( tpl4, tpl5, "if (" ^ tpl3 ^ ")\n {\n" ^ tpl6 ^ "}\n")
-  | _ -> raise (Failure "Translate if ")
+int getvar(char* a)
+  {
+  for(int i = 0; string [i] != 0;i++)
+    {
+    if(!strcmp(string[i],a)){
+      return array[i];
+    }
+  }
+  printf(\"Use of uninitialized variable %s\\n\", a);
+  exit (1);
+}
+int setvar(char* a, int n)
+  {
+  int i;
+  for(i = 0; string [i] != 0;i++)
+    {
+    if(!strcmp(string[i],a)){
+      array[i] = n;
+      return 1;
+    }
+  }
+  string[i] = a;
+  array[i] = n; 
+  return 0;
+}
 
-and translate_do (ast:ast_s) (db:string list) (used: string list):  string list * string list *  string = 
-  match ast with
-  | AST_do sl -> 
-    let tpl1, tpl2, tpl3 = translate_sl sl db used in
-    (tpl1, tpl2, "while (1) {" ^ tpl3 ^ "}\n")
-  | _ -> raise (Failure "Translate do ")
+int main(int argc, char* argv[]) 
+{
+  int a; a = getint();
+  int b; b = getint();
+  int sum; sum = a + b;
+  putint (sum);
+  putint (sum/2);
+  return 0;
+}
+";;
 
-and translate_check (ast:ast_s) (db:string list) (used: string list):  string list * string list *  string = 
-  match ast with
-  | AST_check e -> 
-    let tpl1, tpl2, tpl3 = translate_expr e db used in
-    (tpl1, tpl2, "if(!(" ^ tpl3 ^ ")) break;\n")
-  | _ -> raise (Failure "Translate check ")
-
-and translate_expr (ast:ast_e) (db:string list) (used: string list):  string list * string list *  string = 
-  match ast with
-  | AST_binop ("/", e1, e2) -> 
-    let tpl1, tpl2, tpl3 = translate_expr e1 db used in
-    let tpl4, tpl5, tpl6 = translate_expr e2 tpl1 tpl2 in
-    (tpl4, tpl5, "divide (" ^ tpl3 ^ ", " ^ tpl6 ^ ") ")
-  | AST_binop (op, e1, e2 )-> 
-    let tpl1, tpl2, tpl3 = translate_expr e1 db used in
-    let tpl4, tpl5, tpl6 = translate_expr e2 tpl1 tpl2 in
-    (tpl4, tpl5, tpl3 ^ op ^ tpl6)
-  | AST_id id -> 
-    let used = if mem id db then id::used else used in
-    (db, used, "getvar( \"" ^ id ^ "\"" ^ ")")
-  | AST_num num -> (db, used, num);;
- 
- 
 
 
 (*******************************************************************
    Sample programs in the calculator language
  *******************************************************************)
+
+
 
 let sum_ave_prog = "
   read a
