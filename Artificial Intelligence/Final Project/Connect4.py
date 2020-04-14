@@ -16,6 +16,8 @@ ROW_SPACING = 50
 LEFT_MARGIN = 250
 TOP_MARGIN = 750
 EGGSHELL = (240, 234, 214)  # used for the screen's background color
+MINIMAX_AI = 2
+NON_MINIMAX_AI = 1
 
 
 def create_board():
@@ -140,9 +142,9 @@ def evaluate_pos(board, player):
 
     # find the number of horizontal 
     
-def minimax(board, depth, maximizingPlayer):
+def minimax(board, depth, alpha, beta, maximizingPlayer):
     # performs minimax algorithm to find best move
-    # code based upon pseudocode found here https://en.wikipedia.org/wiki/Minimax
+    # code based upon pseudocode found here https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning#Pseudocode
 
     # check for terminal node or depth=0
     if depth == 0:
@@ -161,11 +163,14 @@ def minimax(board, depth, maximizingPlayer):
         column = valid[0]
         for col in valid:
             board_copy = board.copy()
-            drop_piece(board_copy, col, 2)
-            score = minimax(board_copy, depth-1, False)[1]
+            drop_piece(board_copy, col, NON_MINIMAX_AI)
+            score = minimax(board_copy, depth-1, alpha, beta, False)[1]
             if score > value:
-                value = score
                 column = col
+                value = score
+            alpha = max(alpha, value)
+            if alpha >= beta:
+                break
         return column, value
 
     else:
@@ -174,11 +179,14 @@ def minimax(board, depth, maximizingPlayer):
         column = valid[0]
         for col in valid:
             board_copy = board.copy()
-            drop_piece(board_copy, col, 1)
-            score = minimax(board_copy, depth-1, True)[1]
+            drop_piece(board_copy, col, MINIMAX_AI)
+            score = minimax(board_copy, depth-1, alpha, beta, True)[1]
             if score < value:
                 value = score
                 column = col
+            beta = min(beta, value)
+            if alpha >= beta:
+                break
         return column, value
 
 
@@ -515,7 +523,7 @@ def run_game_with_graphics():
     expectimax_wins = 0
     minimax_wins = 0
     tie_games = 0
-    names = ['PSO', 'Random']
+    names = ['PSO', 'Minimax']
 
     # Open the window and set the background
     pygame.init()
@@ -542,7 +550,7 @@ def run_game_with_graphics():
                 break
 
             if turn == 0:
-                if turn_num == 0 or turn_num == 1:  # if first or second turn, then drop random piece in order to spice up the game
+                if turn_num < 2:  # if first or second turn, then drop random piece in order to spice up the game
                     col = random.choice(get_valid_locations(board))
                     print("Randomly placing a chip...")
                     row = get_next_open_row(board, col)
@@ -572,7 +580,7 @@ def run_game_with_graphics():
 
             # ai's turn
             else:
-                if turn_num == 0 or turn_num == 1:  # if first or second turn, then drop random piece in order to spice up the game
+                if turn_num < 2:  # if first or second turn, then drop random piece in order to spice up the game
                     col = random.choice(get_valid_locations(board))
                     print("Randomly placing a chip...")
                     row = get_next_open_row(board, col)
@@ -582,7 +590,7 @@ def run_game_with_graphics():
                     turn_num += 1
                 else:
                     #col, score = minimax(board, 4, True)
-                    #col, score = expectimax(board, 4, True)
+                    col, score = minimax(board, 6, -math.inf, math.inf, True)
                     col = random.choice(get_valid_locations(board))
                     print("random chooses column {}".format(col))
 
@@ -593,9 +601,9 @@ def run_game_with_graphics():
 
                         if winning_move(board, 2):
                             print_board(board)
-                            print("expectimax wins!")
+                            print("minimax wins!")
                             expectimax_wins += 1
-                            print("total expectimax wins: {}".format(
+                            print("total minimax wins: {}".format(
                                 expectimax_wins))
 
                             game_over = True
