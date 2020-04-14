@@ -1,9 +1,9 @@
 Organization of Programming Languages Assignment 3
 Name: Cameron Knopp (project completed solo)
 
-In order to run this program, do the following:
+In order to run this program, do the following in your terminal:
 
-- Start the ocaml interpreter by typing "ocaml" in your terminal
+- Enter: ocaml
 - Enter: #use "translator.ml";;
 - Enter: print_string (snd
 		(translate (ast_ize_P
