@@ -2,15 +2,19 @@
 # Used this video for help on setting up the OpenAI environment https://www.youtube.com/watch?v=w1jd0Dpbc2o&t=8s and training loop
 
 import numpy as np
-import matplotlib.pyplot as plt
 import math
 import time
 import random
+import paho.mqtt.client as mqtt
+import RPi.GPIO as GPIO
+
+broker_address="10.0.0.179" #broker address (your pis ip address)
+
+client = mqtt.Client() #create new mqtt client instance
+
+client.connect(broker_address) #connect to broker
 
 
-
-#ROW_COUNT = 6
-#COLUMN_COUNT = 7
 ROW_COUNT = 8
 COLUMN_COUNT = 8
 COLUMN_SPACING = 50
@@ -441,8 +445,16 @@ def PSO(board, piece):
 
     return gbest # return the global best coordinate of the swarm
 
+display_piece(row, col, piece):
+    # send the message over mqtt to the esp8266 so that the board state can be updated
+    if (piece == 1):
+        client.publish("/player1", str(row) + str(col))
+    else:
+        client.publish("/player2", str(row) + str(col))
 
-def run_game_no_graphics():
+
+
+def run_game():
     player1_wins = 0
     player2_wins = 0
     tie_games = 0
@@ -501,8 +513,7 @@ def run_game_no_graphics():
                     if is_valid_location(board, col):
                         row = get_next_open_row(board, col)
                         drop_piece(board, col, 2)
-                        draw_piece(screen, row, col, 2)
-
+                        
                         if winning_move(board, 2):
                             print_board(board)
                             print("minimax wins!")
@@ -532,8 +543,10 @@ def run_game_no_graphics():
 
 if __name__ == '__main__':
 
-    
-    run_game_with_graphics()
+    client.loop_start()
+    run_game()
+    client.loop_stop()
+
 
 
 
