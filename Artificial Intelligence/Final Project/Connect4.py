@@ -9,13 +9,17 @@ import random
 import pygame
 from menu_option import Option
 
-ROW_COUNT = 6
-COLUMN_COUNT = 7
+#ROW_COUNT = 6
+#COLUMN_COUNT = 7
+ROW_COUNT = 8
+COLUMN_COUNT = 8
 COLUMN_SPACING = 50
 ROW_SPACING = 50
 LEFT_MARGIN = 250
 TOP_MARGIN = 750
 EGGSHELL = (240, 234, 214)  # used for the screen's background color
+MINIMAX_AI = 2
+NON_MINIMAX_AI = 1
 
 
 def create_board():
@@ -119,37 +123,17 @@ def score_position(board, piece):
             score += evaluate_window(window, piece)
 
     return score
-
-def evaluate_pos(board, player):
-    opponent_score = 0
-    player_score = 0
-
-    # determine which piece belongs to the player
-    opponent = 1
-    if player == 1:
-        opponent = 2
-
-    """
-    For each current position where there is a friendly piece, add to the score points which correspond to the
-    num ways that 4 can be reached from that position, furthermore, add on a 
-
-    """
-
-    return 
     
-
-    # find the number of horizontal 
-    
-def minimax(board, depth, maximizingPlayer):
+def minimax(board, depth, alpha, beta, maximizingPlayer):
     # performs minimax algorithm to find best move
-    # code based upon pseudocode found here https://en.wikipedia.org/wiki/Minimax
+    # code based upon pseudocode found here https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning#Pseudocode
 
     # check for terminal node or depth=0
     if depth == 0:
         return (None, score_position(board, 2))
-    elif winning_move(board, 2):
+    elif winning_move(board, MINIMAX_AI):
         return (0, math.inf)
-    elif winning_move(board, 1):
+    elif winning_move(board, NON_MINIMAX_AI):
         return (0, -math.inf)
     elif len(get_valid_locations(board)) == 0:
         return (0,0)
@@ -161,11 +145,14 @@ def minimax(board, depth, maximizingPlayer):
         column = valid[0]
         for col in valid:
             board_copy = board.copy()
-            drop_piece(board_copy, col, 2)
-            score = minimax(board_copy, depth-1, False)[1]
+            drop_piece(board_copy, col, MINIMAX_AI)
+            score = minimax(board_copy, depth-1, alpha, beta, False)[1]
             if score > value:
-                value = score
                 column = col
+                value = score
+            alpha = max(alpha, value)
+            if alpha >= beta:
+                break
         return column, value
 
     else:
@@ -174,11 +161,14 @@ def minimax(board, depth, maximizingPlayer):
         column = valid[0]
         for col in valid:
             board_copy = board.copy()
-            drop_piece(board_copy, col, 1)
-            score = minimax(board_copy, depth-1, True)[1]
+            drop_piece(board_copy, col, NON_MINIMAX_AI)
+            score = minimax(board_copy, depth-1, alpha, beta, True)[1]
             if score < value:
                 value = score
                 column = col
+            beta = min(beta, value)
+            if alpha >= beta:
+                break
         return column, value
 
 
@@ -249,8 +239,10 @@ def choose_best_move(board, piece):
 
     return best_col
 
+
 def fitness(board, pos, piece):
     # returns the fitness score of a particle at a given position
+
     row = pos[0]
     col = pos[1]
 
@@ -265,11 +257,15 @@ def fitness(board, pos, piece):
             return -math.inf
         i += 1
 
+    b_copy = board.copy()
+    drop_piece(b_copy, col, piece)
+    #return score_position(b_copy, piece)
+    
     opponent = 2
     if piece == 2:
         opponent = 1
 
-    extra_points = 0
+    #extra_points = 0
     
 
     # check whether placing a piece in this position will win the game
@@ -397,7 +393,7 @@ def PSO(board, piece):
     r1 = np.random.random()
     r2 = np.random.random()
     b_copy = board.copy()
-    population_size = 50
+    population_size = 40
     max_generation = 200
     swarm = []
 
@@ -459,9 +455,9 @@ def draw_piece(screen, row, col, piece):
 
 
 def draw_board(board, screen):
-    for row in range(6):
+    for row in range(ROW_COUNT):
         # Loop for each column
-        for column in range(7):
+        for column in range(COLUMN_COUNT):
             # Calculate our location
             x = column * COLUMN_SPACING + LEFT_MARGIN
             y = TOP_MARGIN - row * ROW_SPACING
@@ -512,10 +508,10 @@ def display_wins(screen, player_one_wins, player_two_wins, ties, names):
     screen.blit(ties, (350, 0))
 
 def run_game_with_graphics():
-    expectimax_wins = 0
-    minimax_wins = 0
+    player1_wins = 0
+    player2_wins = 0
     tie_games = 0
-    names = ['PSO', 'Random']
+    names = ['PSO (red)', 'Minimax()']
 
     # Open the window and set the background
     pygame.init()
@@ -523,13 +519,13 @@ def run_game_with_graphics():
     screen.fill(EGGSHELL)
     # draw_menu(screen)
 
-    while expectimax_wins != 100 or minimax_wins != 100:
+    while player1_wins != 100 or player2_wins != 100:
         board = create_board()
         game_over = False
         turn = random.choice([0, 1])
         turn_num = 0
         screen.fill(EGGSHELL)
-        display_wins(screen, minimax_wins, expectimax_wins, tie_games, names)
+        display_wins(screen, player1_wins, player2_wins, tie_games, names)
         draw_board(board, screen)
 
         while not game_over:
@@ -542,7 +538,7 @@ def run_game_with_graphics():
                 break
 
             if turn == 0:
-                if turn_num == 0 or turn_num == 1:  # if first or second turn, then drop random piece in order to spice up the game
+                if turn_num < 2:  # if first or second turn, then drop random piece in order to spice up the game
                     col = random.choice(get_valid_locations(board))
                     print("Randomly placing a chip...")
                     row = get_next_open_row(board, col)
@@ -551,11 +547,8 @@ def run_game_with_graphics():
 
                     turn_num += 1
                 else:
-                    # while (col is None or col > 7 or col < 1 or not is_valid_location(board, col-1)):
-                    # col = int(input("Player 1 Make your Selection (1-7): "))
-                    #col, score = minimax(board, 4, True)
                     col = PSO(board, 1)[1]
-                    print("pso chooses column {}".format(col))
+                    print("PSO chooses column {}".format(col))
 
                     if is_valid_location(board, col):
                         row = get_next_open_row(board, col)
@@ -564,15 +557,15 @@ def run_game_with_graphics():
 
                         if winning_move(board, 1):
                             print_board(board)
-                            print("minimax wins!")
-                            minimax_wins += 1
-                            print("total minimax wins: {}".format(minimax_wins))
+                            print("PSO wins!")
+                            player1_wins += 1
+                            print("total pso wins: {}".format(player1_wins))
                             game_over = True
                             break
 
             # ai's turn
             else:
-                if turn_num == 0 or turn_num == 1:  # if first or second turn, then drop random piece in order to spice up the game
+                if turn_num < 2:  # if first or second turn, then drop random piece in order to spice up the game
                     col = random.choice(get_valid_locations(board))
                     print("Randomly placing a chip...")
                     row = get_next_open_row(board, col)
@@ -581,10 +574,8 @@ def run_game_with_graphics():
 
                     turn_num += 1
                 else:
-                    #col, score = minimax(board, 4, True)
-                    #col, score = expectimax(board, 4, True)
-                    col = random.choice(get_valid_locations(board))
-                    print("random chooses column {}".format(col))
+                    col = minimax(board, 6, -math.inf, math.inf, True)[0]
+                    print("minimax chooses column {}".format(col))
 
                     if is_valid_location(board, col):
                         row = get_next_open_row(board, col)
@@ -593,10 +584,10 @@ def run_game_with_graphics():
 
                         if winning_move(board, 2):
                             print_board(board)
-                            print("expectimax wins!")
-                            expectimax_wins += 1
-                            print("total expectimax wins: {}".format(
-                                expectimax_wins))
+                            print("minimax wins!")
+                            player2_wins += 1
+                            print("total minimax wins: {}".format(
+                                player2_wins))
 
                             game_over = True
                             break
@@ -615,7 +606,7 @@ def run_game_with_graphics():
         draw_board(board, screen)
 
     print("minimax wins: {}".format(minimax_wins))
-    print("expectimax wins: {}".format(expectimax_wins))
+    print("expectimax wins: {}".format(player2_wins))
 
 
 def run_game_no_graphics():
