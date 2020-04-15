@@ -87,7 +87,7 @@ def evaluate_window(window, piece):
     return score
 
 
-def score_position(board, piece):
+def evaluate(board, piece):
 
     score = 0
 
@@ -123,6 +123,7 @@ def score_position(board, piece):
             score += evaluate_window(window, piece)
 
     return score
+
     
 def minimax(board, depth, alpha, beta, maximizingPlayer):
     # performs minimax algorithm to find best move
@@ -130,7 +131,7 @@ def minimax(board, depth, alpha, beta, maximizingPlayer):
 
     # check for terminal node or depth=0
     if depth == 0:
-        return (None, score_position(board, 2))
+        return (None, evaluate(board, MINIMAX_AI))
     elif winning_move(board, MINIMAX_AI):
         return (0, math.inf)
     elif winning_move(board, NON_MINIMAX_AI):
@@ -176,7 +177,7 @@ def expectimax(board, depth, maximizingPlayer):
 
     # check for terminal node or depth=0
     if depth == 0:
-        return (None, score_position(board, 2))
+        return (None, evaluate(board, 2))
     elif winning_move(board, 2):
         return (0, math.inf)
     elif winning_move(board, 1):
@@ -191,7 +192,7 @@ def expectimax(board, depth, maximizingPlayer):
         for col in valid:
             board_copy = board.copy()
             drop_piece(board_copy, col, 2)
-            score = minimax(board_copy, depth-1, False)[1]
+            score = expectimax(board_copy, depth-1, False)[1]
             if score > value:
                 value = score
                 column = col
@@ -205,7 +206,7 @@ def expectimax(board, depth, maximizingPlayer):
         for col in valid:
             board_copy = board.copy()
             drop_piece(board_copy, col, 1)
-            score = minimax(board_copy, depth-1, True)[1]
+            score = expectimax(board_copy, depth-1, True)[1]
             nodes.append(score)
             if score < value:
                 value = score
@@ -232,7 +233,7 @@ def choose_best_move(board, piece):
     for col in valid_locations:
         temp_board = board.copy()
         drop_piece(temp_board, col, piece)
-        score = score_position(temp_board, piece)
+        score = evaluate(temp_board, piece)
         if score > best_score:
             best_score = score
             best_col = col
@@ -259,7 +260,7 @@ def fitness(board, pos, piece):
 
     b_copy = board.copy()
     drop_piece(b_copy, col, piece)
-    #return score_position(b_copy, piece)
+    return evaluate(b_copy, piece)
     
     opponent = 2
     if piece == 2:
@@ -507,6 +508,7 @@ def display_wins(screen, player_one_wins, player_two_wins, ties, names):
     ties = font.render("Ties: "+str(ties), True, (0, 0, 0))
     screen.blit(ties, (350, 0))
 
+
 def run_game_with_graphics():
     player1_wins = 0
     player2_wins = 0
@@ -610,7 +612,91 @@ def run_game_with_graphics():
 
 
 def run_game_no_graphics():
-    pass
+    player1_wins = 0
+    player2_wins = 0
+    tie_games = 0
+    
+    while player1_wins != 100 or player2_wins != 100:
+        board = create_board()
+        game_over = False
+        turn = random.choice([0, 1])
+        turn_num = 0
+
+        while not game_over:
+            col = None
+            # Player's turn
+            if len(get_valid_locations(board)) == 0:
+                game_over = True
+                print("Tie game")
+                tie_games += 1
+                break
+
+            if turn == 0:
+                if turn_num < 2:  # if first or second turn, then drop random piece in order to spice up the game
+                    col = random.choice(get_valid_locations(board))
+                    print("Randomly placing a chip...")
+                    drop_piece(board, col, 1)
+
+                    turn_num += 1
+                else:
+                    col = PSO(board, 1)[1]
+                    print("PSO chooses column {}".format(col))
+
+                    if is_valid_location(board, col):
+                        drop_piece(board, col, 1)
+
+                        if winning_move(board, 1):
+                            print_board(board)
+                            print("PSO wins!")
+                            player1_wins += 1
+                            print("total pso wins: {}".format(player1_wins))
+                            game_over = True
+                            break
+
+            # ai's turn
+            else:
+                if turn_num < 2:  # if first or second turn, then drop random piece in order to spice up the game
+                    col = random.choice(get_valid_locations(board))
+                    print("Randomly placing a chip...")
+                    row = get_next_open_row(board, col)
+                    drop_piece(board, col, 2)
+                    draw_piece(screen, row, col, 2)
+
+                    turn_num += 1
+                else:
+                    col = minimax(board, 6, -math.inf, math.inf, True)[0]
+                    print("minimax chooses column {}".format(col))
+
+                    if is_valid_location(board, col):
+                        row = get_next_open_row(board, col)
+                        drop_piece(board, col, 2)
+                        draw_piece(screen, row, col, 2)
+
+                        if winning_move(board, 2):
+                            print_board(board)
+                            print("minimax wins!")
+                            player2_wins += 1
+                            print("total minimax wins: {}".format(
+                                player2_wins))
+
+                            game_over = True
+                            break
+            print("-----------")
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+
+            time.sleep(.75)
+            print_board(board)
+
+            turn = (turn+1) % 2
+
+        screen.fill(EGGSHELL)
+        draw_board(board, screen)
+
+    print("minimax wins: {}".format(minimax_wins))
+    print("expectimax wins: {}".format(player2_wins))
 
 
 if __name__ == '__main__':
