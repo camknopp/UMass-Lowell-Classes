@@ -658,9 +658,7 @@ def run_game_no_graphics():
                 if turn_num < 2:  # if first or second turn, then drop random piece in order to spice up the game
                     col = random.choice(get_valid_locations(board))
                     print("Randomly placing a chip...")
-                    row = get_next_open_row(board, col)
                     drop_piece(board, col, 2)
-                    draw_piece(screen, row, col, 2)
 
                     turn_num += 1
                 else:
