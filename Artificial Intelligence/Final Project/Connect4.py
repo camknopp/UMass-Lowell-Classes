@@ -20,6 +20,8 @@ TOP_MARGIN = 750
 EGGSHELL = (240, 234, 214)  # used for the screen's background color
 MINIMAX_AI = 2
 NON_MINIMAX_AI = 1
+EXPECTIMAX_AI = 2
+NON_EXPECTIMAX_AI = 1
 
 
 def create_board():
@@ -68,72 +70,28 @@ def winning_move(board, piece):
                 return True
 
 
-def evaluate_window(window, piece):
-    OPPONENT = 1
-    if piece == 1:
-        OPPONENT = 2
-
-    score = 0
-    if window.count(piece) == 4:
-        score += 100
-    elif window.count(piece) == 3 and window.count(0) == 1:
-        score += 5
-    elif window.count(piece) == 2 and window.count(0) == 1:
-        score += 2
-
-    if window.count(OPPONENT) == 3 and window.count(0) == 1:
-        score -= 4
-
-    return score
-
-
 def evaluate(board, player):
-
     """
-    count the number of pieces the given player has in each horizontal, vertical, and diagonal position
-    for each pos
-
+    Returns a heuristic value for the current board
+    Board is evaluated on the number of 4-in-a-rows that can potentially be made from each of the next open slots
     """
+
+    opponent = 2
+    if player == 2:
+        opponent = 1
     score = 0
-    
-    # place higher importance on center column
-    center1 = [int(piece) for piece in list(board[:, 3])]
-    for piece in center1:
-        if piece == player:
-            score+=3
-    center2 = [int(piece) for piece in list(board[:, 4])]
-    for piece in center2:
-        if piece == player:
-            score+=3
 
+    valid = get_valid_locations(board)
 
-    # score horizontal
-    for row in range(ROW_COUNT):
-        row_array = [int(piece) for piece in list(board[row, :])]
-        for col in range(COLUMN_COUNT-3):
-            window = row_array[col:col+4]
-            score += evaluate_window(window, player)
-
-    # score vertical
-    for col in range(COLUMN_COUNT):
-        col_array = [int(piece) for piece in list(board[:, col])]
-        for row in range(ROW_COUNT-3):
-            window = col_array[row:row+4]
-            score += evaluate_window(window, player)
-
-    # score positive-sloped diagonal
-    for row in range(ROW_COUNT-3):
-        for col in range(COLUMN_COUNT-3):
-            window = [board[row+i][col+i] for i in range(4)]
-            score += evaluate_window(window, player)
-
-    # score negatively-sloped diagonal
-    for row in range(ROW_COUNT-3):
-        for col in range(COLUMN_COUNT-3):
-            window = [board[row+3-i][col+i] for i in range(4)]
-            score += evaluate_window(window, player)
+    for col in valid:
+        row = get_next_open_row(board, col)
+        score += fitness(board, [row,col], player)
 
     return score
+
+    
+
+
 
     
 def minimax(board, depth, alpha, beta, maximizingPlayer):
@@ -142,13 +100,13 @@ def minimax(board, depth, alpha, beta, maximizingPlayer):
 
     # check for terminal node or depth=0
     if depth == 0:
-        return (None, evaluate(board, MINIMAX_AI))
+        return (0, evaluate(board, MINIMAX_AI))
     elif winning_move(board, MINIMAX_AI):
-        return (None, 50000)
+        return (0, math.inf)
     elif winning_move(board, NON_MINIMAX_AI):
-        return (None, -50000)
+        return (0, -math.inf)
     elif len(get_valid_locations(board)) == 0:
-        return (None, 0)
+        return (0, 0)
     
 
     if maximizingPlayer:
@@ -188,10 +146,10 @@ def expectimax(board, depth, maximizingPlayer):
 
     # check for terminal node or depth=0
     if depth == 0:
-        return (None, evaluate(board, 2))
-    elif winning_move(board, 2):
+        return (None, evaluate(board, EXPECTIMAX_AI))
+    elif winning_move(board, EXPECTIMAX_AI):
         return (0, math.inf)
-    elif winning_move(board, 1):
+    elif winning_move(board, NON_EXPECTIMAX_AI):
         return (0, -math.inf)
     elif len(get_valid_locations(board)) == 0:
         return (0,0)
@@ -202,7 +160,7 @@ def expectimax(board, depth, maximizingPlayer):
         column = 0
         for col in valid:
             board_copy = board.copy()
-            drop_piece(board_copy, col, 2)
+            drop_piece(board_copy, col, EXPECTIMAX_AI)
             score = expectimax(board_copy, depth-1, False)[1]
             if score > value:
                 value = score
@@ -216,7 +174,7 @@ def expectimax(board, depth, maximizingPlayer):
         nodes = []
         for col in valid:
             board_copy = board.copy()
-            drop_piece(board_copy, col, 1)
+            drop_piece(board_copy, col, NON_EXPECTIMAX_AI)
             score = expectimax(board_copy, depth-1, True)[1]
             nodes.append(score)
             if score < value:
@@ -253,6 +211,114 @@ def choose_best_move(board, piece):
 
 
 def fitness(board, pos, piece):
+    # returns the fitness score of a given position (used for algorithms other than PSO)
+    row = pos[0]
+    col = pos[1]
+
+    opponent = 2
+    if piece == 2:
+        opponent = 1 
+
+    horizontal_score = 0
+    vertical_score = 0
+    pos_diag_score = 0
+    neg_diag_score = 0
+    extra_points = 0
+
+
+    # get the lower and upper bounds for the columns for a 4-in-a-row horizontal win from curr position
+    lower_col = col - 3
+    if lower_col < 0:
+        lower_col = 0
+
+    upper_col = col + 3
+    if upper_col > COLUMN_COUNT-1:
+        upper_col = COLUMN_COUNT-1
+
+    curr_col = lower_col
+
+    # add +1 to horizontal_score for every horiz. 4-in-a-row that can potentially happen from given pos
+    while curr_col <= col and curr_col+3 <= upper_col:
+        if board[row][curr_col] != opponent and board[row][curr_col+1] != opponent and board[row][curr_col+2] != opponent and board[row][curr_col+3] != opponent:
+            horizontal_score+=1
+        curr_col+=1
+
+    if col+1 < COLUMN_COUNT and col-1 >= 0:
+        if board[row][col+1] == opponent and board[row][col-1] == opponent:
+            extra_points+=10 # give extra points for this position because it prevents the opponent from getting 3 in a row horizontally
+
+    # get the lower and upper bounds for rows for a 4-in-a-row vertical win from curr position
+    lower_row = row - 3
+    if lower_row < 0:
+        lower_row = 0
+
+    upper_row = row + 3
+    if upper_row > ROW_COUNT-1:
+        upper_row = ROW_COUNT-1
+
+    # add +1 to vertical_score for every vert. 4-in-a-row that can potentially occur from given pos
+    curr_row = lower_row
+    while curr_row <= row and curr_row+3 <= upper_row:
+        if board[curr_row][col] != opponent and board[curr_row+1][col] != opponent and board[curr_row+2][col] != opponent and board[curr_row+3][col] != opponent:
+            vertical_score+=1
+        curr_row+=1
+
+    # reset these values
+    curr_col = col
+    curr_row = row
+
+    # now need to determine the upper_row and upper_col values for use in scoring the negatively-sloped diagonals
+    done = False
+    while not done:
+        curr_col+=1
+        curr_row+=1
+        if curr_col > COLUMN_COUNT-1 or curr_row > ROW_COUNT-1 or curr_col == col+4:
+            upper_row = curr_row-1
+            upper_col = curr_col-1
+            done=True
+    
+    curr_row = upper_row
+    curr_col = upper_col
+
+    # add +1 to pos_diag_score for every positively-sloped 4-in-a-row that can potentially occur from given pos
+    # traverse board right->left from upper right diagonal position
+    while curr_row >= row and curr_row-3 >= 0 and curr_col >= col and curr_col-3 >= 0:
+        if board[curr_row][curr_col] != opponent and board[curr_row-1][curr_col-1] != opponent and board[curr_row-2][curr_col-2] != opponent and board[curr_row-3][curr_col-3] != opponent:
+            pos_diag_score+=1
+        curr_row-=1
+        curr_col-=1
+
+
+    # reset these values
+    curr_col = col
+    curr_row = row
+
+    # now we determine the lower_col and upper_row values which are used when scoring the postiively-sloped diagonals
+    done = False
+    while not done:
+        curr_col-=1
+        curr_row+=1
+        if curr_col < 0 or curr_row > ROW_COUNT-1 or curr_col == col-4:
+            lower_col = curr_col+1
+            upper_row = curr_row-1
+            done=True
+
+    curr_col = lower_col
+    curr_row = upper_row # want to start at the highest row and move down, since we are looking for negative diagonals
+    
+    # add +1 to neg_diag_score for every negatively-sloped 4-in-a-row that can potentially occur from given pos
+    # traverse board left->right from upper left position
+    while curr_row >= row and curr_row-3 >= 0 and curr_col <= col and curr_col+3 <= COLUMN_COUNT-1:
+        #print("[x][y]==[{}][{}]".format(curr_col, curr_row))
+        if board[curr_row][curr_col] != opponent and board[curr_row-1][curr_col+1] != opponent and board[curr_row-2][curr_col+2] != opponent and board[curr_row-3][curr_col+3] != opponent:
+            neg_diag_score+=1
+        curr_row-=1
+        curr_col+=1
+
+    return horizontal_score + vertical_score + pos_diag_score + neg_diag_score + extra_points
+
+
+def pso_fitness(board, pos, piece):
     # returns the fitness score of a particle at a given position
 
     row = pos[0]
@@ -271,28 +337,18 @@ def fitness(board, pos, piece):
 
     opponent = 2
     if piece == 2:
-        opponent = 1  
+        opponent = 1 
 
-    b_copy = board.copy()
-    drop_piece(b_copy, col, piece)
-    return evaluate(b_copy, piece) - evaluate(b_copy, opponent)
 
-    """
-    
-  
     horizontal_score = 0
     vertical_score = 0
     pos_diag_score = 0
     neg_diag_score = 0
     extra_points = 0 
 
-    
-      
-
     # check whether placing a piece in this position will win the game
     board_copy = board.copy()
     drop_piece(board_copy, col, piece)
-    extra_points += evaluate(board_copy, piece)
 
     if winning_move(board_copy, piece):
         return math.inf
@@ -400,7 +456,7 @@ def fitness(board, pos, piece):
 
     return horizontal_score + vertical_score + pos_diag_score + neg_diag_score + extra_points
 
-    """
+    
 
 
 def PSO(board, piece):
@@ -411,8 +467,8 @@ def PSO(board, piece):
     r1 = np.random.random()
     r2 = np.random.random()
     b_copy = board.copy()
-    population_size = 40
-    max_generation = 200
+    population_size = 50
+    max_generation = 250
     swarm = []
 
     # initialize particle swarm
@@ -434,7 +490,7 @@ def PSO(board, piece):
 
             # adjust the particle's current position using its velocity
             for k in range(2):
-                p[2][k] = math.floor(p[2][k] + c1 * r1 * (p[1][k] - p[0][k]) + c2 * r2 * (gbest[k] - p[0][k]))
+                p[2][k] = math.floor(p[2][k] + c1 * np.random.random() * (p[1][k] - p[0][k]) + c2 * np.random.random() * (gbest[k] - p[0][k]))
                 #print("p[2][{}]: {}".format(k, p[2][k]))
                 p[0][k] += p[2][k]
 
@@ -451,10 +507,10 @@ def PSO(board, piece):
 
 
             # check whether the particle's current position is it's best position thus far
-            if fitness(b_copy, p[0], piece) > fitness(b_copy, p[1], piece):
+            if pso_fitness(b_copy, p[0], piece) > pso_fitness(b_copy, p[1], piece):
                 p[1] = p[0].copy()
                 # check whether the particle's current position is the global best for the swarm thus far
-                if fitness(b_copy, p[1], piece) > fitness(b_copy, gbest, piece):
+                if pso_fitness(b_copy, p[1], piece) > pso_fitness(b_copy, gbest, piece):
                     gbest = p[1].copy()
             swarm[j] = p
 
@@ -679,7 +735,7 @@ def run_game_no_graphics():
 
                     turn_num += 1
                 else:
-                    col = minimax(board, 6, -math.inf, math.inf, True)[0]
+                    col = minimax(board, 5, -math.inf, math.inf, True)[0]
                     print("minimax chooses column {}".format(col))
 
                     if is_valid_location(board, col):
@@ -709,7 +765,7 @@ def run_game_no_graphics():
 if __name__ == '__main__':
 
     
-    run_game_no_graphics()
+    run_game_with_graphics()
 
 
 
