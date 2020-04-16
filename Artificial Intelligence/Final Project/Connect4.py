@@ -91,26 +91,32 @@ def evaluate(board, player):
 
     """
     count the number of pieces the given player has in each horizontal, vertical, and diagonal position
-
+    for each pos
 
     """
     score = 0
-    center1 
-    # score center column
-    center_array = [int(i) for i in list(board[:, COLUMN_COUNT//2])]
-    center_count = center_array.count(player)
-    score += center_count * 3
+    
+    # place higher importance on center column
+    center1 = [int(piece) for piece in list(board[:, 3])]
+    for piece in center1:
+        if piece == player:
+            score+=3
+    center2 = [int(piece) for piece in list(board[:, 4])]
+    for piece in center2:
+        if piece == player:
+            score+=3
+
 
     # score horizontal
     for row in range(ROW_COUNT):
-        row_array = [int(i) for i in list(board[row, :])]
+        row_array = [int(piece) for piece in list(board[row, :])]
         for col in range(COLUMN_COUNT-3):
             window = row_array[col:col+4]
             score += evaluate_window(window, player)
 
     # score vertical
     for col in range(COLUMN_COUNT):
-        col_array = [int(i) for i in list(board[:, col])]
+        col_array = [int(piece) for piece in list(board[:, col])]
         for row in range(ROW_COUNT-3):
             window = col_array[row:row+4]
             score += evaluate_window(window, player)
@@ -138,11 +144,11 @@ def minimax(board, depth, alpha, beta, maximizingPlayer):
     if depth == 0:
         return (None, evaluate(board, MINIMAX_AI))
     elif winning_move(board, MINIMAX_AI):
-        return (0, math.inf)
+        return (None, 50000)
     elif winning_move(board, NON_MINIMAX_AI):
-        return (0, -math.inf)
+        return (None, -50000)
     elif len(get_valid_locations(board)) == 0:
-        return (0,0)
+        return (None, 0)
     
 
     if maximizingPlayer:
@@ -263,20 +269,31 @@ def fitness(board, pos, piece):
             return -math.inf
         i += 1
 
-    b_copy = board.copy()
-    drop_piece(b_copy, col, piece)
-    return evaluate(b_copy, piece)
-    
     opponent = 2
     if piece == 2:
-        opponent = 1
+        opponent = 1  
 
-    #extra_points = 0
+    b_copy = board.copy()
+    drop_piece(b_copy, col, piece)
+    return evaluate(b_copy, piece) - evaluate(b_copy, opponent)
+
+    """
     
+  
+    horizontal_score = 0
+    vertical_score = 0
+    pos_diag_score = 0
+    neg_diag_score = 0
+    extra_points = 0 
+
+    
+      
 
     # check whether placing a piece in this position will win the game
     board_copy = board.copy()
     drop_piece(board_copy, col, piece)
+    extra_points += evaluate(board_copy, piece)
+
     if winning_move(board_copy, piece):
         return math.inf
     else:
@@ -290,14 +307,7 @@ def fitness(board, pos, piece):
     drop_piece(board_copy, col, opponent)
     if winning_move(board_copy, opponent):
         return math.inf
-    
-        
-    
-    horizontal_score = 0
-    vertical_score = 0
-    pos_diag_score = 0
-    neg_diag_score = 0
-
+  
     # get the lower and upper bounds for the columns for a 4-in-a-row horizontal win from curr position
     lower_col = col - 3
     if lower_col < 0:
@@ -389,6 +399,8 @@ def fitness(board, pos, piece):
         curr_col+=1
 
     return horizontal_score + vertical_score + pos_diag_score + neg_diag_score + extra_points
+
+    """
 
 
 def PSO(board, piece):
@@ -673,7 +685,6 @@ def run_game_no_graphics():
                     if is_valid_location(board, col):
                         row = get_next_open_row(board, col)
                         drop_piece(board, col, 2)
-                        draw_piece(screen, row, col, 2)
 
                         if winning_move(board, 2):
                             print_board(board)
@@ -686,26 +697,19 @@ def run_game_no_graphics():
                             break
             print("-----------")
 
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-
             time.sleep(.75)
             print_board(board)
 
             turn = (turn+1) % 2
 
-        screen.fill(EGGSHELL)
-        draw_board(board, screen)
-
-    print("minimax wins: {}".format(minimax_wins))
-    print("expectimax wins: {}".format(player2_wins))
+    print("PSO wins: {}".format(minimax_wins))
+    print("MINIMAX wins: {}".format(player2_wins))
 
 
 if __name__ == '__main__':
 
     
-    run_game_with_graphics()
+    run_game_no_graphics()
 
 
 
