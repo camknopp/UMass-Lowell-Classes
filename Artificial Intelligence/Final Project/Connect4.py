@@ -87,13 +87,18 @@ def evaluate_window(window, piece):
     return score
 
 
-def evaluate(board, piece):
+def evaluate(board, player):
 
+    """
+    count the number of pieces the given player has in each horizontal, vertical, and diagonal position
+
+
+    """
     score = 0
-
+    center1 
     # score center column
     center_array = [int(i) for i in list(board[:, COLUMN_COUNT//2])]
-    center_count = center_array.count(piece)
+    center_count = center_array.count(player)
     score += center_count * 3
 
     # score horizontal
@@ -101,26 +106,26 @@ def evaluate(board, piece):
         row_array = [int(i) for i in list(board[row, :])]
         for col in range(COLUMN_COUNT-3):
             window = row_array[col:col+4]
-            score += evaluate_window(window, piece)
+            score += evaluate_window(window, player)
 
     # score vertical
     for col in range(COLUMN_COUNT):
         col_array = [int(i) for i in list(board[:, col])]
         for row in range(ROW_COUNT-3):
             window = col_array[row:row+4]
-            score += evaluate_window(window, piece)
+            score += evaluate_window(window, player)
 
     # score positive-sloped diagonal
     for row in range(ROW_COUNT-3):
         for col in range(COLUMN_COUNT-3):
             window = [board[row+i][col+i] for i in range(4)]
-            score += evaluate_window(window, piece)
+            score += evaluate_window(window, player)
 
     # score negatively-sloped diagonal
     for row in range(ROW_COUNT-3):
         for col in range(COLUMN_COUNT-3):
             window = [board[row+3-i][col+i] for i in range(4)]
-            score += evaluate_window(window, piece)
+            score += evaluate_window(window, player)
 
     return score
 
@@ -513,7 +518,7 @@ def run_game_with_graphics():
     player1_wins = 0
     player2_wins = 0
     tie_games = 0
-    names = ['PSO (red)', 'Minimax()']
+    names = ['PSO (red)', 'Minimax(yellow)']
 
     # Open the window and set the background
     pygame.init()
