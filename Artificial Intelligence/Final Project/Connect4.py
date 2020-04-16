@@ -1,5 +1,4 @@
 # Base game code from tutorial at https://www.youtube.com/watch?v=XpYz-q1lxu8&t=812s
-# Used this video for help on setting up the OpenAI environment https://www.youtube.com/watch?v=w1jd0Dpbc2o&t=8s and training loop
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -672,7 +671,7 @@ def run_game_with_graphics():
                 if event.type == pygame.QUIT:
                     pygame.quit()
 
-            time.sleep(.75)
+            time.sleep(.5)
             print_board(board)
 
             turn = (turn+1) % 2
@@ -753,7 +752,7 @@ def run_game_no_graphics():
                             break
             print("-----------")
 
-            time.sleep(.75)
+            time.sleep(.5)
             print_board(board)
 
             turn = (turn+1) % 2
