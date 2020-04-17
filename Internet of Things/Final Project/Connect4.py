@@ -6,11 +6,12 @@ import math
 import time
 import random
 import paho.mqtt.client as mqtt
-import RPi.GPIO as GPIO
 
-broker_address="10.0.0.179" #broker address (your pis ip address)
+broker_address= "10.0.0.157" #broker address (your pis ip address)
 
 client = mqtt.Client() #create new mqtt client instance
+
+client.connect(broker_address) #connect to broker
 
 client.connect(broker_address) #connect to broker
 
@@ -29,20 +30,6 @@ EXPECTIMAX_AI = 2
 NON_EXPECTIMAX_AI = 1
 
 coord2num = dict()
-
-z = 0
-r = 0
-c = 0
-
-while z < 64:
-    coord = (r, c)
-    coord2num.update({coord : z})
-    c+=1
-    if c > 7:
-        c = 0
-        r+=1
-    z+=1
-
 
 
 def create_board():
@@ -570,6 +557,7 @@ def run_game_no_graphics():
                             print_board(board)
                             print("PSO wins!")
                             player1_wins += 1
+                            client.publish("/win", "1")
                             print("total pso wins: {}".format(player1_wins))
                             game_over = True
                             break
@@ -593,6 +581,7 @@ def run_game_no_graphics():
                         if winning_move(board, 2):
                             print_board(board)
                             print("minimax wins!")
+                            client.publish("/win", "2")
                             player2_wins += 1
                             print("total minimax wins: {}".format(
                                 player2_wins))
@@ -612,9 +601,23 @@ def run_game_no_graphics():
 
 if __name__ == '__main__':
 
-    
-    run_game_with_graphics()
+    i = 0
+    row = 0
+    col = 0
 
+    while i < 64:
+        coord = (row, col)
+        coord2num.update({coord : str(i)})
+        col+=1
+        if col > 7:
+            col = 0
+            row+=1
+        i+=1
+
+    # start loop, run game
+    client.loop_start()
+    run_game_no_graphics()
+    client.loop_stop()
 
 
 

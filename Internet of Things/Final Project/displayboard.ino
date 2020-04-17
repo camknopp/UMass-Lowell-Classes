@@ -3,15 +3,16 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
+#include <string>
 #include <map>
 
 // initialize 8x8 bicolor matrix
 Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
 
 // WiFi/MQTT parameters
-#define WLAN_SSID "182RSu3"
-#define WLAN_PASS "Redrum182u3"
-#define BROKER_IP "10.0.0.179"
+#define WLAN_SSID "KNOPPNET_5GHZ"
+#define WLAN_PASS "AAAAABBBBBCCCCCDDDDDEEEEEF"
+#define BROKER_IP "10.0.0.157"
 
 // initialize MQTT client
 WiFiClient client;
@@ -19,22 +20,7 @@ PubSubClient mqttclient(client);
 
 typedef std::pair<int, int> coord;
 
-std::map<std::string, std::pair<int, int>> num2coord;
-for (row = 0, col = 0, i = 0; i < 64; i++)
-{
-    /*
-    this loop creates a mapping from number to coordinate on matrix
-    e.g., "0" -> (0, 0),   "1" -> (0, 1)
-    */
-    num2coord.insert(str(i), coord(row, col);
-    col++;
-
-    if (col > 7)
-    {
-        col = 0;
-        row++; // move one row up
-    }
-}
+std::map<int, coord> num2coord;
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
@@ -46,7 +32,7 @@ void callback(char *topic, byte *payload, unsigned int length)
 
     if (strcmp(topic, "/win") == 0)
     {
-        if (strcmp((char *) payload, "1")
+        if (strcmp((char *)payload, "1") == 0)
         {
             // player has won, so display message accordingly
 
@@ -60,6 +46,7 @@ void callback(char *topic, byte *payload, unsigned int length)
                 matrix.print("You win!");
                 matrix.writeDisplay();
                 delay(100);
+                matrix.clear();
             }
         }
         else
@@ -77,26 +64,60 @@ void callback(char *topic, byte *payload, unsigned int length)
                 matrix.writeDisplay();
                 delay(100);
             }
+            matrix.clear();
         }
     }
 
     else if (strcmp(topic, "/player1") == 0)
     {
-        coordinate = coord[payload];
-        matrix.drawPixel(coordinate.first, coordinate.second, LED_RED);
+        int num;
+
+        if (strlen((char *)payload) == 1)
+            num = ((char *)payload)[0] - 48;
+        else if (strlen((char *)payload) == 2)
+            num = 10 * (int(((char *)payload)[0]) - 48) + int(((char *)payload[1])) - 48;
+
+        coord c = num2coord[num];
+        matrix.drawPixel(c.first, c.second, LED_RED);
         matrix.writeDisplay();
     }
 
     else if (strcmp(topic, "/player2") == 0)
     {
-        coordinate = coord[payload];
-        matrix.drawPixel(coordinate.first, coordinate.second, LED_YELLOW);
+        int num;
+
+        if (strlen((char *)payload) == 1)
+            num = ((char *)payload)[0] - 48;
+        else if (strlen((char *)payload) == 2)
+            num = 10 * (int(((char *)payload)[0]) - 48) + int(((char *)payload[1])) - 48;
+
+        coord c = num2coord[num];
+        matrix.drawPixel(c.first, c.second, LED_YELLOW);
         matrix.writeDisplay();
     }
 }
 
 void setup()
 {
+    matrix.clear();
+    int row = 0;
+    int col = 0;
+
+    for (int i = 0; i < 64; i++)
+    {
+        /*
+    this loop creates a mapping from number to coordinate on matrix
+    e.g., "0" -> (0, 0),   "1" -> (0, 1) 
+    */
+        num2coord.insert(i, coord(row, col));
+        col++;
+
+        if (col > 7)
+        {
+            col = 0;
+            row++; // move one row up
+        }
+    }
     //Serial.begin(115200);
 
     Serial.begin(9600);
@@ -123,7 +144,6 @@ void setup()
     connect();
 
     //setup pins
-    pinMode(LED, OUTPUT); // setup pin for input
 }
 
 void loop()
@@ -153,7 +173,7 @@ void connect()
 
             mqttclient.subscribe("/player1");
             mqttclient.subscribe("/player2");
-            mqttclient.subscribe("/win")
+            mqttclient.subscribe("/win");
         }
         else
         {
