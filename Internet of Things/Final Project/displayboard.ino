@@ -109,7 +109,7 @@ void setup()
     this loop creates a mapping from number to coordinate on matrix
     e.g., "0" -> (0, 0),   "1" -> (0, 1) 
     */
-        num2coord.insert(i, coord(row, col));
+        num2coord[i] = coord(row, col);
         col++;
 
         if (col > 7)
