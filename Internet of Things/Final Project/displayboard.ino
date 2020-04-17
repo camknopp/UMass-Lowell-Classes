@@ -5,6 +5,7 @@
 #include "Adafruit_LEDBackpack.h"
 #include <map>
 
+// initialize 8x8 bicolor matrix
 Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
 
 // WiFi/MQTT parameters
@@ -12,11 +13,28 @@ Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
 #define WLAN_PASS "Redrum182u3"
 #define BROKER_IP "10.0.0.179"
 
-//pins
-#define LED 5
-
+// initialize MQTT client
 WiFiClient client;
 PubSubClient mqttclient(client);
+
+typedef std::pair<int, int> coord;
+
+std::map<std::string, std::pair<int, int>> num2coord;
+for (row = 0, col = 0, i = 0; i < 64; i++)
+{
+    /*
+    this loop creates a mapping from number to coordinate on matrix
+    e.g., "0" -> (0, 0),   "1" -> (0, 1)
+    */
+    num2coord.insert(str(i), coord(row, col);
+    col++;
+
+    if (col > 7)
+    {
+        col = 0;
+        row++; // move one row up
+    }
+}
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
@@ -61,19 +79,25 @@ void callback(char *topic, byte *payload, unsigned int length)
             }
         }
     }
-    else if (strcmp(topic, "/player1") == 0 || strcmp(topic, "/player2") == 0)
-    {
-        /*
-        now need to take payload and convert it to coordinates and then display those coordinates
-        */
-       for(int i = 0; i < len(()))
 
+    else if (strcmp(topic, "/player1") == 0)
+    {
+        coordinate = coord[payload];
+        matrix.drawPixel(coordinate.first, coordinate.second, LED_RED);
+        matrix.writeDisplay();
+    }
+
+    else if (strcmp(topic, "/player2") == 0)
+    {
+        coordinate = coord[payload];
+        matrix.drawPixel(coordinate.first, coordinate.second, LED_YELLOW);
+        matrix.writeDisplay();
     }
 }
 
 void setup()
 {
-    Serial.begin(115200);
+    //Serial.begin(115200);
 
     Serial.begin(9600);
     Serial.println("8x8 LED Matrix Test");
