@@ -49,13 +49,12 @@ void callback(char *topic, byte *payload, unsigned int length)
                 matrix.print("You win!");
                 matrix.writeDisplay();
                 delay(100);
-                matrix.clear();
             }
+            matrix.clear();
         }
         else
         {
             // player has lost, so display message accordingly
-
             matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
             matrix.setTextSize(1);
             matrix.setTextColor(LED_RED);
