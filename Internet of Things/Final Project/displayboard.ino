@@ -12,7 +12,7 @@ Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
 // WiFi/MQTT parameters
 #define WLAN_SSID "KNOPPNET_5GHZ"
 #define WLAN_PASS "AAAAABBBBBCCCCCDDDDDEEEEEF"
-#define BROKER_IP "10.0.0.157"
+#define BROKER_IP "10.0.0.179"
 
 // initialize MQTT client
 WiFiClient client;
@@ -32,6 +32,9 @@ void callback(char *topic, byte *payload, unsigned int length)
 
     if (strcmp(topic, "/win") == 0)
     {
+
+        Serial.println(F("win message received"));
+
         if (strcmp((char *)payload, "1") == 0)
         {
             // player has won, so display message accordingly
@@ -71,6 +74,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     else if (strcmp(topic, "/player1") == 0)
     {
         int num;
+        Serial.println(F("player 1 message received"));
 
         if (strlen((char *)payload) == 1)
             num = ((char *)payload)[0] - 48;
@@ -85,6 +89,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     else if (strcmp(topic, "/player2") == 0)
     {
         int num;
+        Serial.println(F("player 2 message received"));
 
         if (strlen((char *)payload) == 1)
             num = ((char *)payload)[0] - 48;
@@ -99,7 +104,8 @@ void callback(char *topic, byte *payload, unsigned int length)
 
 void setup()
 {
-    matrix.clear();
+    Serial.println(F("entering setup"));
+
     int row = 0;
     int col = 0;
 
@@ -124,6 +130,7 @@ void setup()
     Serial.println("8x8 LED Matrix Test");
 
     matrix.begin(0x70); // pass in the address
+    matrix.clear();
 
     // connect to wifi
     WiFi.mode(WIFI_STA);
@@ -142,8 +149,7 @@ void setup()
     mqttclient.setServer(BROKER_IP, 1883);
     mqttclient.setCallback(callback);
     connect();
-
-    //setup pins
+    Serial.println(F("Leaving setup"));
 }
 
 void loop()
@@ -158,7 +164,7 @@ void loop()
 
 void connect()
 {
-
+    matrix.clear();
     while (WiFi.status() != WL_CONNECTED)
     {
         Serial.println(F("Wifi issue"));

@@ -1,15 +1,5 @@
 import paho.mqtt.client as mqtt
-import RPi.GPIO as GPIO
 import time
-
-"""
-publish on or off message 
-"""
-
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
-
-GPIO.setup(17,GPIO.IN, pull_up_down=GPIO.PUD_UP)  
 
 broker_address="10.0.0.179" #broker address (your pis ip address)
 
