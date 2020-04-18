@@ -540,16 +540,21 @@ def run_game_no_graphics():
             if turn == 0:
                 if turn_num < 2:  # if first or second turn, then drop random piece in order to spice up the game
                     col = random.choice(get_valid_locations(board))
+                    row = get_next_open_row(board, col)
                     print("Randomly placing a chip...")
                     drop_piece(board, col, 1)
+                    client.publish("/player1", str(coord2num[(row,col)]))
 
                     turn_num += 1
                 else:
                     col = PSO(board, 1)[1]
+                    row = get_next_open_row(board, col)
+
                     print("PSO chooses column {}".format(col))
 
                     if is_valid_location(board, col):
                         drop_piece(board, col, 1)
+                        client.publish("/player1", str(coord2num[(row,col)]))
 
                         if winning_move(board, 1):
                             print_board(board)
@@ -564,8 +569,10 @@ def run_game_no_graphics():
             else:
                 if turn_num < 2:  # if first or second turn, then drop random piece in order to spice up the game
                     col = random.choice(get_valid_locations(board))
+                    row = get_next_open_row(board, col)
                     print("Randomly placing a chip...")
                     drop_piece(board, col, 2)
+                    client.publish("/player2", str(coord2num[(row,col)]))
 
                     turn_num += 1
                 else:
@@ -575,6 +582,7 @@ def run_game_no_graphics():
                     if is_valid_location(board, col):
                         row = get_next_open_row(board, col)
                         drop_piece(board, col, 2)
+                        client.publish("/player2", str(coord2num[(row,col)]))
 
                         if winning_move(board, 2):
                             print_board(board)
