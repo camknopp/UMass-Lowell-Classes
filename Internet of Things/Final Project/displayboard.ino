@@ -14,6 +14,7 @@ Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
 #define WLAN_PASS "AAAAABBBBBCCCCCDDDDDEEEEEF"
 #define BROKER_IP "10.0.0.179"
 
+
 // initialize MQTT client
 WiFiClient client;
 PubSubClient mqttclient(client);
@@ -86,7 +87,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     }
 
     else if (strcmp(topic, "/player2") == 0)
-    {
+    {  
         int num;
         Serial.println(F("player 2 message received"));
 
@@ -96,7 +97,7 @@ void callback(char *topic, byte *payload, unsigned int length)
             num = 10 * (int(((char *)payload)[0]) - 48) + int(((char *)payload[1])) - 48;
 
         coord c = num2coord[num];
-        matrix.drawPixel(c.first, c.second, LED_YELLOW);
+        matrix.drawPixel(c.first, c.second, LED_GREEN);
         matrix.writeDisplay();
     }
 }
