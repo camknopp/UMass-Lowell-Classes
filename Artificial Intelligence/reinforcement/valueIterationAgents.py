@@ -62,6 +62,22 @@ class ValueIterationAgent(ValueEstimationAgent):
     def runValueIteration(self):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
+        i = 0
+        while i < self.iterations:
+            v = self.values.copy()
+            for state in self.mdp.getStates():
+                self.values[state] = -float('inf')
+                actions = self.mdp.getPossibleActions(state)
+
+                for action in actions:
+                    curr = 0
+                    nextStates = self.mdp.getTransitionStatesAndProbs(state, action)
+                    for next in nextStates:
+                        curr+= next[1] * (self.mdp.getReward(state, action, next[0]) + self.discount * self.values[next[0]])
+                    self.values[state] = max(curr, self.values[state])
+                if self.values[state] == float('inf'):
+                    self.values[state] = 0.0
+            i+=1
 
 
     def getValue(self, state):
@@ -77,7 +93,11 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        Q = 0
+        nextStates = self.mdp.getTransitionStatesAndProbs(state, action)
+        for next in nextStates:
+            Q+=next[1]*(self.mdp.getReward(state,action,next[0]) + self.discount * self.values[next[0]])
+        return Q
 
     def computeActionFromValues(self, state):
         """
@@ -89,7 +109,18 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        if self.mdp.isTerminal(state):
+            return None
+        else:
+            best_val = -float('inf')
+            best_action = None
+
+            for action in self.mdp.getPossibleActions(state):
+                Q = self.computeQValueFromValues(state, action)
+                if Q > best_val:
+                    best_val = Q
+                    best_action = action
+            return best_action
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
