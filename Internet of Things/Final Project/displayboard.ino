@@ -30,12 +30,15 @@ void callback(char *topic, byte *payload, unsigned int length)
     */
 
     payload[length] = '\0'; // add null terminator to byte payload so we can treat it as a string
+    if (strcmp(topic, "/clear_board") == 0)
+    {
+        matrix.clear();
+    }
 
-    if (strcmp(topic, "/win") == 0)
+    else if (strcmp(topic, "/win") == 0)
     {
 
         Serial.println(F("win message received"));
-
         if (strcmp((char *)payload, "1") == 0)
         {
             // player has won, so display message accordingly
@@ -194,6 +197,7 @@ void connect()
         {
             Serial.println(F("MQTT server Connected!"));
 
+            mqttclient.subscribe("/clear_board");
             mqttclient.subscribe("/player1");
             mqttclient.subscribe("/player2");
             mqttclient.subscribe("/win");

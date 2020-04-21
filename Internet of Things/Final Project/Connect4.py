@@ -531,19 +531,25 @@ def on_message(client, userdata, message):
 	msg = (message.payload).decode("utf-8")
 	
 	if message.topic == "/AI_choice":
+        global AI_CHOSEN
+
         if msg == '1':
-            AI_CHOICE = 1
+            AI_CHOICE =1
             AI_CHOSEN = True
         elif msg == '2':
             AI_CHOICE = 2
             AI_CHOSEN = True
-        elif msg == '3':
+      s  elif msg == '3':
             AI_CHOICE = 3	
             AI_CHOSEN = True
         else:
             client.publish("/choose_AI", "invalid choice. Please enter a number between 1 and 3")	
 
     elif message.topic == "/move_choice":
+        global CHOICE_MADE
+        global curr_board
+        global player_choice
+
         if int(msg) in get_valid_locations(curr_board):
             player_choice = int(msg)
             CHOICE_MADE = True
@@ -553,27 +559,36 @@ def on_message(client, userdata, message):
 
 
 def run_game_no_graphics():
+    global AI_CHOSEN
+    global CHOICE_MADE
+    global player_choice
+    global curr_board
     curr_board = create_board()
     game_over = False
     AI_CHOSEN = False
-    client.publish("/choose_AI", "Please choose an AI to play against: \n1) Minimax\n2) Exepectimax\n3) PSO")
+    client.publish("/clear_board")
 
-    turn = random.choice([0, 1])
-    turn_num = 0
+    client.publish("/choose_AI", "Please choose an AI to play against: \n1) Minimax\n2) Exepectimax\n3) PSO")
+    while AI_CHOSEN == False:
+        pass
+
+    turn = random.choice([0, 1])  
 
     while not game_over:
         col = None
+        CHOICE_MADE = False
 
         if len(get_valid_locations(curr_board)) == 0:
             game_over = True
             print("Tie game")
             client.publish("/win", "tie")
+            time.sleep(10)
             tie_games += 1
             break
 
         # player's turn
         if turn == 0:
-            valid_moves = get_valid_location(curr_board)
+            valid_moves = get_valid_locations(curr_board)
             client.publish("/make_move_msg", "Please enter a move out of the following choices {}".format(valid_moves))
             while CHOICE_MADE == False:
                 pass # keep looping until the user enters a valid move
@@ -595,10 +610,10 @@ def run_game_no_graphics():
 
         # AI's turn
         else:
-            if AI_CHOICE = 1:
+            if AI_CHOICE == 1:
                 col = minimax(curr_board, 4, -math.inf, math.inf, True)[0]
                 print("Minimax chooses column {}".format(col))
-            elif AI_CHOICE = 2:
+            elif AI_CHOICE == 2:
                 col = expectimax(curr_board, 4, True)[0]
                 print("Expectimax chooses column {}".format(col))
             else:
