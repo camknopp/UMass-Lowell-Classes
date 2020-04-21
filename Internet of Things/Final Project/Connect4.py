@@ -59,30 +59,49 @@ def is_valid_location(board, col):
 def print_board(board):
     print(np.flip(board, 0))
 
+# convert the winning 4-in-a-row to a string of coordinate number
+def get_coord_nums(row_and_col_pairs):
+    final = ""
+    curr =  ""
+    for row, col in row_and_col_pairs:
+        curr = coord2num[(row, col)]
+        if len(curr) == 1:
+            curr = '0' + curr # append 0 to the front to make things easier in the arduino code
+        final += (curr + " ")
+        curr = "" # reset for next coordinate
+
+    return final
+
 
 def winning_move(board, piece):
     # check for horizontal win
     for col in range(COLUMN_COUNT-3):
         for row in range(ROW_COUNT):
             if board[row][col] == piece and board[row][col+1] == piece and board[row][col+2] == piece and board[row][col+3] == piece:
-                return True
+                coords_string = get_coord_nums([(row,col), (row,col+1), (row, col+2), (row, col+3)])
+                return True, coords_string
 
     # check for vertical win
     for col in range(COLUMN_COUNT):
         for row in range(ROW_COUNT-3):
             if board[row][col] == piece and board[row+1][col] == piece and board[row+2][col] == piece and board[row+3][col] == piece:
-                return True
+                coords_string = get_coord_nums([(row,col), (row+1,col), (row+2,col), (row+3,col)])
+                return True, coords_string
 
     # check for positively-sloped diagonal win
     for col in range(COLUMN_COUNT-3):
         for row in range(ROW_COUNT-3):
             if board[row][col] == piece and board[row+1][col+1] == piece and board[row+2][col+2] == piece and board[row+3][col+3] == piece:
-                return True
+                coords_string = get_coord_nums([(row,col), (row+1,col+1), (row+2,col+2), (row+3,col+3)])
+                return True, coords_string
 
     for col in range(COLUMN_COUNT-3):
         for row in range(3, ROW_COUNT):
             if board[row][col] == piece and board[row-1][col+1] == piece and board[row-2][col+2] == piece and board[row-3][col+3] == piece:
-                return True
+                coords_string = get_coord_nums([(row, col), (row-1,col+1), (row-2,col+2), (row-3,col+3)])
+                return True, coords_string
+    
+    return False, None
 
 
 def evaluate(board, player):
@@ -112,9 +131,9 @@ def minimax(board, depth, alpha, beta, maximizingPlayer):
     # check for terminal node or depth=0
     if depth == 0:
         return (0, evaluate(board, MINIMAX_AI))
-    elif winning_move(board, MINIMAX_AI):
+    elif winning_move(board, MINIMAX_AI)[0]:
         return (0, math.inf)
-    elif winning_move(board, NON_MINIMAX_AI):
+    elif winning_move(board, NON_MINIMAX_AI)[0]:
         return (0, -math.inf)
     elif len(get_valid_locations(board)) == 0:
         return (0, 0)
@@ -158,9 +177,9 @@ def expectimax(board, depth, maximizingPlayer):
     # check for terminal node or depth=0
     if depth == 0:
         return (None, evaluate(board, EXPECTIMAX_AI))
-    elif winning_move(board, EXPECTIMAX_AI):
+    elif winning_move(board, EXPECTIMAX_AI)[0]:
         return (0, math.inf)
-    elif winning_move(board, NON_EXPECTIMAX_AI):
+    elif winning_move(board, NON_EXPECTIMAX_AI)[0]:
         return (0, -math.inf)
     elif len(get_valid_locations(board)) == 0:
         return (0,0)
@@ -361,18 +380,18 @@ def pso_fitness(board, pos, piece):
     board_copy = board.copy()
     drop_piece(board_copy, col, piece)
 
-    if winning_move(board_copy, piece):
+    if winning_move(board_copy, piece)[0]:
         return math.inf
     else:
         if get_next_open_row(board_copy, col) is not None:
             drop_piece(board_copy, col, opponent)
-            if winning_move(board_copy, opponent):
+            if winning_move(board_copy, opponent)[0]:
                 return -math.inf# dropping this piece will set the opponent up for a win, which we don't want
 
     # check whether this position will stop the opponent from winning
     board_copy = board.copy()
     drop_piece(board_copy, col, opponent)
-    if winning_move(board_copy, opponent):
+    if winning_move(board_copy, opponent)[0]:
         return math.inf
   
     # get the lower and upper bounds for the columns for a 4-in-a-row horizontal win from curr position
@@ -532,6 +551,7 @@ def on_message(client, userdata, message):
 	
 	if message.topic == "/AI_choice":
         global AI_CHOSEN
+        global AI_CHOICE
 
         if msg == '1':
             AI_CHOICE =1
@@ -539,7 +559,7 @@ def on_message(client, userdata, message):
         elif msg == '2':
             AI_CHOICE = 2
             AI_CHOSEN = True
-      s  elif msg == '3':
+        elif msg == '3':
             AI_CHOICE = 3	
             AI_CHOSEN = True
         else:
@@ -560,13 +580,16 @@ def on_message(client, userdata, message):
 
 def run_game_no_graphics():
     global AI_CHOSEN
+    global AI_CHOICE
     global CHOICE_MADE
     global player_choice
     global curr_board
+
+    client.on_message = on_message
     curr_board = create_board()
     game_over = False
     AI_CHOSEN = False
-    client.publish("/clear_board")
+    client.publish("/clear_board", "null")
 
     client.publish("/choose_AI", "Please choose an AI to play against: \n1) Minimax\n2) Exepectimax\n3) PSO")
     while AI_CHOSEN == False:
@@ -601,7 +624,8 @@ def run_game_no_graphics():
                 drop_piece(curr_board, player_choice, 1)
                 client.publish("/player1", str(coord2num[(row, player_choice)]))
 
-                if winning_move(curr_board, 1):
+                winning_move, win_coords = winning_move(curr_board, 1)
+                if winning_move:
                     print_board(curr_board)
                     client.publish("/win", "1")
                     time.sleep(10)
@@ -624,10 +648,12 @@ def run_game_no_graphics():
                 row = get_next_open_row(curr_board, col)
                 drop_piece(curr_board, col, 2)
                 client.publish("/player2", str(coord2num[(row,col)]))
-
-                if winning_move(curr_board, 2):
+                
+                winning, win_coords = winning_move(curr_board, 2)
+                if winning:
                     print_board(curr_board)
                     print("AI wins!")
+                    client.publish("/win1", )
                     client.publish("/win", "2")
                     time.sleep(10)
                     game_over = True

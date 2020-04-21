@@ -3,6 +3,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
+#include <vector>
 #include <string>
 #include <map>
 
@@ -14,7 +15,6 @@ Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
 #define WLAN_PASS "AAAAABBBBBCCCCCDDDDDEEEEEF"
 #define BROKER_IP "10.0.0.179"
 
-
 // initialize MQTT client
 WiFiClient client;
 PubSubClient mqttclient(client);
@@ -22,6 +22,58 @@ PubSubClient mqttclient(client);
 typedef std::pair<int, int> coord;
 
 std::map<int, coord> num2coord;
+
+void flash_winning_move(std::string coords, bool is_AI)
+{
+    std::string c1, c2, c3, c4;
+    coord coord1, coord2, coord3, coord4;
+
+    c1 = msg[0] + msg[1];
+    c2 = msg[3] + msg[4];
+    c3 = msg[6] + msg[7];
+    c4 = msg[9] + msg[10];
+
+    // convert each of these four coordinates to numbers
+    if (c1[0] == '0')
+        coord1 = num2coord[c1[1] - 48];
+    else
+        coord1 = num2coord[c1 - 48];
+
+    if (c2[0] == '0')
+        coord2 = num2coord[c2[1] - 48];
+    else
+        coord2 = num2coord[c2 - 48];
+
+    if (c3[0] == '0')
+        coord3 = num2coord[c3[1] - 48];
+    else
+        coord3 = num2coord[c3 - 48];
+
+    if (c4[0] == '0')
+        coord4 = num2coord[c4[1] - 48];
+    else
+        coord4 = num2coord[c4 - 48];
+
+    std::vector<coord> winning_coords = {coord1, coord2, coord3, coord4};
+
+    for (int i = 0; i < ; i++)
+    {
+        for(auto& x : winning_coords)
+        {
+            if (i % 2 == 0)
+                matrix.drawPixel(x.first, x.second, LED_OFF);
+            else if (i % 2 != 0 && is_AI)
+                matrix.drawPixel(x.first, x.second, LED_GREEN);
+            else if (i % 2 != 0 && !is_AI)
+                matrix.drawPixel(x.first, x.second, LED_RED);
+
+            matrix.writeDisplay();
+            delay(100);
+        }
+    }
+
+    return void;
+}
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
@@ -35,60 +87,61 @@ void callback(char *topic, byte *payload, unsigned int length)
         matrix.clear();
     }
 
-    else if (strcmp(topic, "/win") == 0)
+    else if (strcmp(topic, "/win1") == 0)
     {
+        // player has won, so display message accordingly
+        std::string msg((char *)payload);
+        flash_winning_move(msg, false)
 
-        Serial.println(F("win message received"));
-        if (strcmp((char *)payload, "1") == 0)
+        matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
+        matrix.setTextSize(1);
+        matrix.setTextColor(LED_GREEN);
+        for (int8_t x = 7; x >= -36; x--)
         {
-            // player has won, so display message accordingly
+            matrix.clear();
+            matrix.setCursor(x, 0);
+            matrix.print("You win!");
+            matrix.writeDisplay();
+            delay(100);
+        }
+        matrix.clear();
+    }
 
-            matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
-            matrix.setTextSize(1);
-            matrix.setTextColor(LED_GREEN);
-            for (int8_t x = 7; x >= -36; x--)
-            {
-                matrix.clear();
-                matrix.setCursor(x, 0);
-                matrix.print("You win!");
-                matrix.writeDisplay();
-                delay(100);
-            }
-            matrix.clear();
-        }
-        else if (strcmp((char*)payload, "2") == 0)
+    else if (strcmp(topic, "/win2") == 0)
+    {
+        std::string msg((char *)payload);
+        flash_winning_move(msg, true)
+
+        // player has lost, so display message accordingly
+        matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
+        matrix.setTextSize(1);
+        matrix.setTextColor(LED_RED);
+        for (int8_t x = 7; x >= -36; x--)
         {
-            // player has lost, so display message accordingly
-            matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
-            matrix.setTextSize(1);
-            matrix.setTextColor(LED_RED);
-            for (int8_t x = 7; x >= -36; x--)
-            {
-                matrix.clear();
-                matrix.setCursor(x, 0);
-                matrix.print("You suck!");
-                matrix.writeDisplay();
-                delay(100);
-            }
             matrix.clear();
+            matrix.setCursor(x, 0);
+            matrix.print("You suck!");
+            matrix.writeDisplay();
+            delay(100);
         }
-        else
+        matrix.clear();
+    }
+
+    else if (strcmp(topic, "/tie") == 0)
+    {
+        // player has lost, so display message accordingly
+        matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
+        matrix.setTextSize(1);
+        matrix.setTextColor(LED_RED);
+        for (int8_t x = 7; x >= -36; x--)
         {
-            // player has lost, so display message accordingly
-            matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
-            matrix.setTextSize(1);
-            matrix.setTextColor(LED_RED);
-            for (int8_t x = 7; x >= -36; x--)
-            {
-                matrix.clear();
-                matrix.setCursor(x, 0);
-                matrix.print("Tie!");
-                matrix.writeDisplay();
-                delay(100);
-            }
             matrix.clear();
+            matrix.setCursor(x, 0);
+            matrix.print("Tie!");
+            matrix.writeDisplay();
+            delay(100);
         }
-        
+        matrix.clear();
     }
 
     else if (strcmp(topic, "/player1") == 0)
@@ -107,7 +160,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     }
 
     else if (strcmp(topic, "/player2") == 0)
-    {  
+    {
         int num;
         Serial.println(F("player 2 message received"));
 
