@@ -544,10 +544,12 @@ def on_message(client, userdata, message):
             client.publish("/choose_AI", "invalid choice. Please enter a number between 1 and 3")	
 
     elif message.topic == "/move_choice":
-        if int(msg) not in get_valid_locations(curr_board):
+        if int(msg) in get_valid_locations(curr_board):
             player_choice = int(msg)
+            CHOICE_MADE = True
         else:
             client.publish("/make_move_msg", "invalid move. Please enter a column from this list of choices: {}".format(get_valid_locations(curr_board)))
+            CHOICE_MADE = False
 
 
 def run_game_no_graphics():
@@ -561,7 +563,7 @@ def run_game_no_graphics():
 
     while not game_over:
         col = None
-        # Player's turn
+
         if len(get_valid_locations(curr_board)) == 0:
             game_over = True
             print("Tie game")
@@ -569,17 +571,20 @@ def run_game_no_graphics():
             tie_games += 1
             break
 
+        # player's turn
         if turn == 0:
-            valid_moves = get_valid_location
-            client.publish("/make_move_msg", "Please make a move out of the following choices {}".format(valid_moves))s
-            col = PSO(curr_board, 1)[1]
-            row = get_next_open_row(curr_board, col)
+            valid_moves = get_valid_location(curr_board)
+            client.publish("/make_move_msg", "Please enter a move out of the following choices {}".format(valid_moves))
+            while CHOICE_MADE == False:
+                pass # keep looping until the user enters a valid move
+            CHOICE_MADE = False # reset for next time around
 
-            print("PSO chooses column {}".format(col))
+            row = get_next_open_row(curr_board, player_choice)
+            print("You have chosen column {}".format(player_choice))
 
-            if is_valid_location(curr_board, col):
-                drop_piece(curr_board, col, 1)
-                client.publish("/player1", str(coord2num[(row,col)]))
+            if is_valid_location(curr_board, player_choice):
+                drop_piece(curr_board, player_choice, 1)
+                client.publish("/player1", str(coord2num[(row, player_choice)]))
 
                 if winning_move(curr_board, 1):
                     print_board(curr_board)
@@ -588,16 +593,16 @@ def run_game_no_graphics():
                     game_over = True
                     break
 
-        # ai's turn
+        # AI's turn
         else:
             if AI_CHOICE = 1:
-                col = minimax(curr_board, 5, -math.inf, math.inf, True)[0]
+                col = minimax(curr_board, 4, -math.inf, math.inf, True)[0]
                 print("Minimax chooses column {}".format(col))
             elif AI_CHOICE = 2:
                 col = expectimax(curr_board, 4, True)[0]
                 print("Expectimax chooses column {}".format(col))
             else:
-                col = PSO(curr_board, 1)[1]
+                col = PSO(curr_board, 2)[1]
                 print("PSO chooses column {}".format(col))
 
             if is_valid_location(curr_board, col):
