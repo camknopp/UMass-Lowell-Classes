@@ -624,10 +624,10 @@ def run_game_no_graphics():
                 drop_piece(curr_board, player_choice, 1)
                 client.publish("/player1", str(coord2num[(row, player_choice)]))
 
-                winning_move, win_coords = winning_move(curr_board, 1)
-                if winning_move:
+                winning, win_coords = winning_move(curr_board, 1)
+                if winning:
                     print_board(curr_board)
-                    client.publish("/win", "1")
+                    client.publish("/win2", win_coords)
                     time.sleep(10)
                     game_over = True
                     break
@@ -653,8 +653,7 @@ def run_game_no_graphics():
                 if winning:
                     print_board(curr_board)
                     print("AI wins!")
-                    client.publish("/win1", )
-                    client.publish("/win", "2")
+                    client.publish("/win2", win_coords)
                     time.sleep(10)
                     game_over = True
                     break

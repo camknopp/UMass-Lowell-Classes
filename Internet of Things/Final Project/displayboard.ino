@@ -23,42 +23,26 @@ typedef std::pair<int, int> coord;
 
 std::map<int, coord> num2coord;
 
-void flash_winning_move(std::string coords, bool is_AI)
+void flash_winning_move(std::string msg, bool is_AI)
 {
-    std::string c1, c2, c3, c4;
+    std::vector<char> c1, c2, c3, c4;
     coord coord1, coord2, coord3, coord4;
 
-    c1 = msg[0] + msg[1];
-    c2 = msg[3] + msg[4];
-    c3 = msg[6] + msg[7];
-    c4 = msg[9] + msg[10];
+    c1 = {msg[0], msg[1]};
+    c2 = {msg[3], msg[4]};
+    c3 = {msg[6], msg[7]};
+    c4 = {msg[9], msg[10]};
 
-    // convert each of these four coordinates to numbers
-    if (c1[0] == '0')
-        coord1 = num2coord[c1[1] - 48];
-    else
-        coord1 = num2coord[c1 - 48];
-
-    if (c2[0] == '0')
-        coord2 = num2coord[c2[1] - 48];
-    else
-        coord2 = num2coord[c2 - 48];
-
-    if (c3[0] == '0')
-        coord3 = num2coord[c3[1] - 48];
-    else
-        coord3 = num2coord[c3 - 48];
-
-    if (c4[0] == '0')
-        coord4 = num2coord[c4[1] - 48];
-    else
-        coord4 = num2coord[c4 - 48];
+    coord1 = num2coord[10 * (int(c1[0]) - 48) + (int(c1[1]) - 48)];
+    coord2 = num2coord[10 * (int(c2[0]) - 48) + (int(c2[1]) - 48)];
+    coord3 = num2coord[10 * (int(c3[0]) - 48) + (int(c3[1]) - 48)];
+    coord4 = num2coord[10 * (int(c4[0]) - 48) + (int(c4[1]) - 48)];
 
     std::vector<coord> winning_coords = {coord1, coord2, coord3, coord4};
 
-    for (int i = 0; i < ; i++)
+    for (int i = 0; i < 4; i++)
     {
-        for(auto& x : winning_coords)
+        for (auto &x : winning_coords)
         {
             if (i % 2 == 0)
                 matrix.drawPixel(x.first, x.second, LED_OFF);
@@ -71,8 +55,6 @@ void flash_winning_move(std::string coords, bool is_AI)
             delay(100);
         }
     }
-
-    return void;
 }
 
 void callback(char *topic, byte *payload, unsigned int length)
@@ -91,7 +73,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     {
         // player has won, so display message accordingly
         std::string msg((char *)payload);
-        flash_winning_move(msg, false)
+        flash_winning_move(msg, false);
 
         matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
         matrix.setTextSize(1);
@@ -110,7 +92,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     else if (strcmp(topic, "/win2") == 0)
     {
         std::string msg((char *)payload);
-        flash_winning_move(msg, true)
+        flash_winning_move(msg, true);
 
         // player has lost, so display message accordingly
         matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
