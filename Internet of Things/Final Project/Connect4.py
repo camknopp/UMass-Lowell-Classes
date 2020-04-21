@@ -1,5 +1,4 @@
-# Base game code from tutorial at https://www.youtube.com/watch?v=XpYz-q1lxu8&t=812s
-# Used this video for help on setting up the OpenAI environment https://www.youtube.com/watch?v=w1jd0Dpbc2o&t=8s and training loop
+# Parts of base game code taken from https://www.youtube.com/watch?v=XpYz-q1lxu8&t=812s
 
 import numpy as np
 import math
@@ -12,6 +11,10 @@ broker_address= "10.0.0.179" #broker address (your pis ip address)
 client = mqtt.Client() #create new mqtt client instance
 
 client.connect(broker_address) #connect to broker
+
+#subscribe to topics
+client.subscribe("/AI_choice")
+client.subscribe("/move_choice")
 
 # Base game code from tutorial at https://www.youtube.com/watch?v=XpYz-q1lxu8&t=812s
 
@@ -26,6 +29,12 @@ MINIMAX_AI = 2
 NON_MINIMAX_AI = 1
 EXPECTIMAX_AI = 2
 NON_EXPECTIMAX_AI = 1
+AI_CHOSEN = False
+AI_CHOICE = 1
+curr_board = None
+CHOICE_MADE = False
+player_choice = 0
+
 
 coord2num = dict()
 
@@ -517,92 +526,98 @@ def PSO(board, piece):
     return gbest # return the global best coordinate of the swarm
 
 
+# how the mqtt client will react when it receives a message
+def on_message(client, userdata, message):
+	msg = (message.payload).decode("utf-8")
+	
+	if message.topic == "/AI_choice":
+        if msg == '1':
+            AI_CHOICE = 1
+            AI_CHOSEN = True
+        elif msg == '2':
+            AI_CHOICE = 2
+            AI_CHOSEN = True
+        elif msg == '3':
+            AI_CHOICE = 3	
+            AI_CHOSEN = True
+        else:
+            client.publish("/choose_AI", "invalid choice. Please enter a number between 1 and 3")	
+
+    elif message.topic == "/move_choice":
+        if int(msg) not in get_valid_locations(curr_board):
+            player_choice = int(msg)
+        else:
+            client.publish("/make_move_msg", "invalid move. Please enter a column from this list of choices: {}".format(get_valid_locations(curr_board)))
+
+
 def run_game_no_graphics():
-    player1_wins = 0
-    player2_wins = 0
-    tie_games = 0
-    
-    while player1_wins != 100 or player2_wins != 100:
-        board = create_board()
-        game_over = False
-        turn = random.choice([0, 1])
-        turn_num = 0
+    curr_board = create_board()
+    game_over = False
+    AI_CHOSEN = False
+    client.publish("/choose_AI", "Please choose an AI to play against: \n1) Minimax\n2) Exepectimax\n3) PSO")
 
-        while not game_over:
-            col = None
-            # Player's turn
-            if len(get_valid_locations(board)) == 0:
-                game_over = True
-                print("Tie game")
-                tie_games += 1
-                break
+    turn = random.choice([0, 1])
+    turn_num = 0
 
-            if turn == 0:
-                if turn_num < 2:  # if first or second turn, then drop random piece in order to spice up the game
-                    col = random.choice(get_valid_locations(board))
-                    row = get_next_open_row(board, col)
-                    print("Randomly placing a chip...")
-                    drop_piece(board, col, 1)
-                    client.publish("/player1", str(coord2num[(row,col)]))
+    while not game_over:
+        col = None
+        # Player's turn
+        if len(get_valid_locations(curr_board)) == 0:
+            game_over = True
+            print("Tie game")
+            client.publish("/win", "tie")
+            tie_games += 1
+            break
 
-                    turn_num += 1
-                else:
-                    col = PSO(board, 1)[1]
-                    row = get_next_open_row(board, col)
+        if turn == 0:
+            valid_moves = get_valid_location
+            client.publish("/make_move_msg", "Please make a move out of the following choices {}".format(valid_moves))s
+            col = PSO(curr_board, 1)[1]
+            row = get_next_open_row(curr_board, col)
 
-                    print("PSO chooses column {}".format(col))
+            print("PSO chooses column {}".format(col))
 
-                    if is_valid_location(board, col):
-                        drop_piece(board, col, 1)
-                        client.publish("/player1", str(coord2num[(row,col)]))
+            if is_valid_location(curr_board, col):
+                drop_piece(curr_board, col, 1)
+                client.publish("/player1", str(coord2num[(row,col)]))
 
-                        if winning_move(board, 1):
-                            print_board(board)
-                            print("PSO wins!")
-                            player1_wins += 1
-                            client.publish("/win", "1")
-                            print("total pso wins: {}".format(player1_wins))
-                            game_over = True
-                            break
+                if winning_move(curr_board, 1):
+                    print_board(curr_board)
+                    client.publish("/win", "1")
+                    time.sleep(10)
+                    game_over = True
+                    break
 
-            # ai's turn
+        # ai's turn
+        else:
+            if AI_CHOICE = 1:
+                col = minimax(curr_board, 5, -math.inf, math.inf, True)[0]
+                print("Minimax chooses column {}".format(col))
+            elif AI_CHOICE = 2:
+                col = expectimax(curr_board, 4, True)[0]
+                print("Expectimax chooses column {}".format(col))
             else:
-                if turn_num < 2:  # if first or second turn, then drop random piece in order to spice up the game
-                    col = random.choice(get_valid_locations(board))
-                    row = get_next_open_row(board, col)
-                    print("Randomly placing a chip...")
-                    drop_piece(board, col, 2)
-                    client.publish("/player2", str(coord2num[(row,col)]))
+                col = PSO(curr_board, 1)[1]
+                print("PSO chooses column {}".format(col))
 
-                    turn_num += 1
-                else:
-                    col = minimax(board, 5, -math.inf, math.inf, True)[0]
-                    print("minimax chooses column {}".format(col))
+            if is_valid_location(curr_board, col):
+                row = get_next_open_row(curr_board, col)
+                drop_piece(curr_board, col, 2)
+                client.publish("/player2", str(coord2num[(row,col)]))
 
-                    if is_valid_location(board, col):
-                        row = get_next_open_row(board, col)
-                        drop_piece(board, col, 2)
-                        client.publish("/player2", str(coord2num[(row,col)]))
+                if winning_move(curr_board, 2):
+                    print_board(curr_board)
+                    print("AI wins!")
+                    client.publish("/win", "2")
+                    time.sleep(10)
+                    game_over = True
+                    break
+        print("-----------")
 
-                        if winning_move(board, 2):
-                            print_board(board)
-                            print("minimax wins!")
-                            client.publish("/win", "2")
-                            player2_wins += 1
-                            print("total minimax wins: {}".format(
-                                player2_wins))
+        time.sleep(.5)
+        print_board(curr_board)
 
-                            game_over = True
-                            break
-            print("-----------")
-
-            time.sleep(.5)
-            print_board(board)
-
-            turn = (turn+1) % 2
-
-    print("PSO wins: {}".format(minimax_wins))
-    print("MINIMAX wins: {}".format(player2_wins))
+        turn = (turn+1) % 2
 
 
 if __name__ == '__main__':
@@ -610,7 +625,9 @@ if __name__ == '__main__':
     i = 0
     row = 0
     col = 0
-
+    
+    # create coordinate -> number encoding
+    # used when sending mqtt messages to the arduino for which coordinate to illuminate
     while i < 64:
         coord = (row, col)
         coord2num.update({coord : str(i)})

@@ -53,7 +53,7 @@ void callback(char *topic, byte *payload, unsigned int length)
             }
             matrix.clear();
         }
-        else
+        else if (strcmp((char*)payload, "2") == 0)
         {
             // player has lost, so display message accordingly
             matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
@@ -69,6 +69,23 @@ void callback(char *topic, byte *payload, unsigned int length)
             }
             matrix.clear();
         }
+        else
+        {
+            // player has lost, so display message accordingly
+            matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
+            matrix.setTextSize(1);
+            matrix.setTextColor(LED_RED);
+            for (int8_t x = 7; x >= -36; x--)
+            {
+                matrix.clear();
+                matrix.setCursor(x, 0);
+                matrix.print("Tie!");
+                matrix.writeDisplay();
+                delay(100);
+            }
+            matrix.clear();
+        }
+        
     }
 
     else if (strcmp(topic, "/player1") == 0)
