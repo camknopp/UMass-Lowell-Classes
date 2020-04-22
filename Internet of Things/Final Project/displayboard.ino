@@ -27,7 +27,7 @@ void flash_winning_move(std::string msg, bool is_AI)
 {
     std::vector<char> c1, c2, c3, c4;
     coord coord1, coord2, coord3, coord4;
-
+    
     c1 = {msg[0], msg[1]};
     c2 = {msg[3], msg[4]};
     c3 = {msg[6], msg[7]};
