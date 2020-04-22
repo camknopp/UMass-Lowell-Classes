@@ -156,7 +156,7 @@ def expectimax(board, depth, maximizingPlayer):
     if maximizingPlayer:
         value = -math.inf
         valid = get_valid_locations(board)
-        column = 0
+        column = valid[0]
         for col in valid:
             board_copy = board.copy()
             drop_piece(board_copy, col, EXPECTIMAX_AI)
@@ -169,7 +169,7 @@ def expectimax(board, depth, maximizingPlayer):
     else:
         value = math.inf
         valid = get_valid_locations(board)
-        column = 0
+        column = valid[0]
         nodes = []
         for col in valid:
             board_copy = board.copy()
