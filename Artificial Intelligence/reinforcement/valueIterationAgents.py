@@ -62,22 +62,19 @@ class ValueIterationAgent(ValueEstimationAgent):
     def runValueIteration(self):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
-        vcurr = util.Counter()
+        
         for i in range(self.iterations):
-            vcurr = self.values.copy()
+            curr_vals = self.values.copy()
             for state in self.mdp.getStates():
-                all_actions = self.mdp.getPossibleActions(state)
-                transitions = []
-                value_list = []
+                value_list = list()
                 if self.mdp.isTerminal(state):
                     self.values[state] = 0
                 else:
-                    for action in all_actions:
-                        transitions = self.mdp.getTransitionStatesAndProbs(state, action)
-                        value = 0
-                        for transition in transitions:
-                            value += transition[1]*(self.mdp.getReward(state, action, transition[0]) + self.discount * vcurr[transition[0]])
-                        value_list.append(value)
+                    for action in self.mdp.getPossibleActions(state):
+                        curr = 0
+                        for next_state in self.mdp.getTransitionStatesAndProbs(state, action):
+                            curr += next_state[1]*(self.mdp.getReward(state, action, next_state[0]) + self.discount * curr_vals[next_state[0]])
+                        value_list.append(curr)
                     self.values[state] = max(value_list)
 
 
@@ -94,11 +91,10 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
-        value = 0
-        transitions = self.mdp.getTransitionStatesAndProbs(state, action)
-        for transition in transitions:
-             value += transition[1]*(self.mdp.getReward(state, action, transition[0]) + self.discount * self.values[transition[0]])
-        return value
+        Q = 0
+        for next_state in self.mdp.getTransitionStatesAndProbs(state, action):
+             Q += next_state[1]*(self.mdp.getReward(state, action, next_state[0]) + self.discount * self.values[next_state[0]])
+        return Q
 
     def computeActionFromValues(self, state):
         """
@@ -110,21 +106,20 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
-        if self.mdp.isTerminal(state):
-            return None
-        else:
-            bestval = -99999999999
-            bestaction = 0
-            all_actions = self.mdp.getPossibleActions(state)
-            for action in all_actions:
-                transitions = self.mdp.getTransitionStatesAndProbs(state, action)
-                value = 0
-                for transition in transitions:
-                    value += transition[1]*(self.mdp.getReward(state, action, transition[0]) + self.discount * self.values[transition[0]])
-                if value > bestval:
-                    bestaction = action
-                    bestval = value
-            return bestaction
+        if not self.mdp.isTerminal(state):
+            b_action = None
+            b_val = -float('inf')
+            
+            for action in self.mdp.getPossibleActions(state):
+                curr = 0
+                for next_state in self.mdp.getTransitionStatesAndProbs(state, action):
+                    curr += next_state[1]*(self.mdp.getReward(state, action, next_state[0]) + self.discount * self.values[next_state[0]])
+                if curr > b_val:
+                    b_val = curr
+                    b_action = action
+                    
+            return b_action
+        return None
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
@@ -165,15 +160,15 @@ class AsynchronousValueIterationAgent(ValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
-        for k in range(self.iterations):
+        for i in range(0, self.iterations):
+            curr = i %  len(self.mdp.getStates())
+            state = self.mdp.getStates()[curr]
+            action = self.computeActionFromValues(state)
 
-            state = self.mdp.getStates()[k %  len(self.mdp.getStates())]
-            best = self.computeActionFromValues(state)
-            if best is None:
-                V = 0
+            if action is None:
+                self.values[state] = 0
             else:
-                V = self.computeQValueFromValues(state, best)
-            self.values[state] = V
+                self.values[state] = self.computeQValueFromValues(state, action)
 
 class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
     """
@@ -206,26 +201,25 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
-        allStates = self.mdp.getStates()
         predecessors = dict()
-        for state in allStates:
+        for state in self.mdp.getStates():
             predecessors[state]=set()
-        for state in allStates:
-            allactions=self.mdp.getPossibleActions(state)
-            for a in allactions:
+            
+        for state in self.mdp.getStates():
+            for a in self.mdp.getPossibleActions(state):
                 possibleNextStates = self.mdp.getTransitionStatesAndProbs(state, a)
                 for nextState,pred in possibleNextStates:
                     if pred>0:
                         predecessors[nextState].add(state)
+        
         pq = util.PriorityQueue()
-        for state in allStates:
-
+        for state in self.mdp.getStates():
             stateQValues = self.computeQValues(state)
-
             if len(stateQValues) > 0:
                 maxQValue = stateQValues[stateQValues.argMax()]
                 diff = abs(self.values[state] - maxQValue)
                 pq.push(state, -diff)
+
         for i in range(self.iterations):
             if pq.isEmpty():
                 return
