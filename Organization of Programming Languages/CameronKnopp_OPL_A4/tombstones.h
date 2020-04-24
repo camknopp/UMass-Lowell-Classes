@@ -1,3 +1,22 @@
+#ifndef TOMBSTONES_H
+#define TOMBSTONES_H
+
+// Defintion of Tomb for Pointer class
+template <class T>
+struct Tomb {
+    T* content;
+    int ref_cnt;
+
+    Tomb<T>() {
+        content = NULL;
+        ref_cnt = 0;
+    }
+    ~Tomb() {
+        content = NULL;
+        ref_cnt = 0;
+    }
+};
+
 template <class T>
 class Pointer
 {
@@ -28,3 +47,5 @@ bool operator==(const int n, const Pointer<T> &t) { return t == n; }
 
 template <class T>
 bool operator!=(const int n, const Pointer<T> &t) { return t != n; }
+
+#endif
