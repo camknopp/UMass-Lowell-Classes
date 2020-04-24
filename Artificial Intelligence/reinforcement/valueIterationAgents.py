@@ -201,13 +201,13 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
                         predecessors[nextState[0]].add(s)
         
         for s in self.mdp.getStates():
-            stateQValues = util.Counter()
+            Q = util.Counter()
 
             for action in self.mdp.getPossibleActions(s):
-                stateQValues[action] = self.computeQValueFromValues(s, action)
+                Q[action] = self.computeQValueFromValues(s, action)
 
-            if len(stateQValues) > 0:
-                maxQValue = stateQValues[stateQValues.argMax()]
+            if len(Q) > 0:
+                maxQValue = Q[Q.argMax()]
                 diff = abs(self.values[s] - maxQValue)
                 pq.push(s, -diff)
 
@@ -216,21 +216,18 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
             if pq.isEmpty():
                 return
             s = pq.pop()
-            stateQValues = util.Counter()
+            Q = util.Counter()
 
             for action in self.mdp.getPossibleActions(s):
-                stateQValues[action] = self.computeQValueFromValues(s, action)
-
-            max_Q = stateQValues[stateQValues.argMax()]
-            self.values[s] = maxQValue
+                Q[action] = self.computeQValueFromValues(s, action)
+            self.values[s] = Q[Q.argMax()]
 
             for p in predecessors[s]:
                 p_Q = util.Counter()
                 for action in self.mdp.getPossibleActions(p):
                     p_Q[action] = self.computeQValueFromValues(p, action)
                 
-                max_Q = p_Q[p_Q.argMax()]
-                diff = abs(self.values[p] - max_Q)
+                diff = abs(self.values[p] - p_Q[p_Q.argMax()])
 
                 if diff > self.theta:
                     pq.update(p, -diff)
