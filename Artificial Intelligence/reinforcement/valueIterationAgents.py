@@ -66,16 +66,17 @@ class ValueIterationAgent(ValueEstimationAgent):
         for i in range(self.iterations):
             curr_vals = self.values.copy()
             for state in self.mdp.getStates():
-                value_list = list()
                 if self.mdp.isTerminal(state):
                     self.values[state] = 0
                 else:
+                    max_val = -float('inf')
                     for action in self.mdp.getPossibleActions(state):
                         curr = 0
                         for next_state in self.mdp.getTransitionStatesAndProbs(state, action):
                             curr += next_state[1]*(self.mdp.getReward(state, action, next_state[0]) + self.discount * curr_vals[next_state[0]])
-                        value_list.append(curr)
-                    self.values[state] = max(value_list)
+                        if curr > max_val:
+                            max_val = curr
+                    self.values[state] = max_val
 
 
     def getValue(self, state):
@@ -160,9 +161,9 @@ class AsynchronousValueIterationAgent(ValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
-        for i in range(0, self.iterations):
-            curr = i %  len(self.mdp.getStates())
-            state = self.mdp.getStates()[curr]
+        for i in range(self.iterations):
+            curr_index = i % len(self.mdp.getStates())
+            state = self.mdp.getStates()[curr_index]
             action = self.computeActionFromValues(state)
 
             if action is None:
@@ -192,12 +193,12 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
         predecessors = dict()
         pq = util.PriorityQueue()
         for state in self.mdp.getStates():
-            predecessors[state]=set()
+            predecessors[state] = set()
             
         for s in self.mdp.getStates():
             for a in self.mdp.getPossibleActions(s):
                 for nextState in self.mdp.getTransitionStatesAndProbs(s, a):
-                    if nextState[1]>0:
+                    if nextState[1] > 0:
                         predecessors[nextState[0]].add(s)
         
         for s in self.mdp.getStates():
