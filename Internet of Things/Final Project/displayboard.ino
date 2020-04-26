@@ -25,36 +25,53 @@ std::map<int, coord> num2coord;
 
 void flash_winning_move(std::string msg, bool is_AI)
 {
+    Serial.println(F("Flashing winning move"));
     std::vector<char> c1, c2, c3, c4;
     coord coord1, coord2, coord3, coord4;
     
+    // get 4 board space numbers of winning 4-in-a-row from payload message
     c1 = {msg[0], msg[1]};
     c2 = {msg[3], msg[4]};
     c3 = {msg[6], msg[7]};
     c4 = {msg[9], msg[10]};
 
+    // convert each of these numbers from string -> integer -> coordinate on board
     coord1 = num2coord[10 * (int(c1[0]) - 48) + (int(c1[1]) - 48)];
     coord2 = num2coord[10 * (int(c2[0]) - 48) + (int(c2[1]) - 48)];
     coord3 = num2coord[10 * (int(c3[0]) - 48) + (int(c3[1]) - 48)];
     coord4 = num2coord[10 * (int(c4[0]) - 48) + (int(c4[1]) - 48)];
 
+    Serial.println(coord1.first);
+    Serial.println(coord1.second);
+    Serial.println(coord2.first);
+    Serial.println(coord2.second);
+    Serial.println(coord3.first);
+    Serial.println(coord3.second);
+    Serial.println(coord4.first);
+    Serial.println(coord4.second);
+
+
+    // put these 4 coordinates into a vector
     std::vector<coord> winning_coords = {coord1, coord2, coord3, coord4};
 
-    for (int i = 0; i < 4; i++)
+    // iterate through each of these coordinates
+    for (int i = 0; i < 16; i++)
     {
-        for (auto &x : winning_coords)
+        for (coord x : winning_coords)
         {
+            // on even numbered iterations, turn the LEDs off, so it flashes
             if (i % 2 == 0)
                 matrix.drawPixel(x.first, x.second, LED_OFF);
             else if (i % 2 != 0 && is_AI)
                 matrix.drawPixel(x.first, x.second, LED_GREEN);
             else if (i % 2 != 0 && !is_AI)
                 matrix.drawPixel(x.first, x.second, LED_RED);
-
-            matrix.writeDisplay();
-            delay(100);
         }
+        matrix.writeDisplay();
+        delay(250);
     }
+    Serial.println(F("Finished flashing winning move"));
+
 }
 
 void callback(char *topic, byte *payload, unsigned int length)
@@ -74,6 +91,8 @@ void callback(char *topic, byte *payload, unsigned int length)
         // player has won, so display message accordingly
         std::string msg((char *)payload);
         flash_winning_move(msg, false);
+        Serial.println(F("Flashed winning move for player 1"));
+
 
         matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
         matrix.setTextSize(1);
@@ -93,6 +112,8 @@ void callback(char *topic, byte *payload, unsigned int length)
     {
         std::string msg((char *)payload);
         flash_winning_move(msg, true);
+        Serial.println(F("Flashed winning move for player 2"));
+
 
         // player has lost, so display message accordingly
         matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
@@ -235,7 +256,10 @@ void connect()
             mqttclient.subscribe("/clear_board");
             mqttclient.subscribe("/player1");
             mqttclient.subscribe("/player2");
-            mqttclient.subscribe("/win");
+            mqttclient.subscribe("/win1");
+            mqttclient.subscribe("/win2");
+            mqttclient.subscribe("/clear_board");
+
         }
         else
         {
