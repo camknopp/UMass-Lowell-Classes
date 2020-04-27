@@ -1,13 +1,9 @@
 CC = clang++ -std=c++17
-OBJECTS = tests.o 
 
 all: tests
 
-tests: tests.o
-	$(CC) $(OBJECTS) -o $@
-
-$(OBJECTS): tests.cpp
-	$(CC) tests.cpp -c
-
+tests: tests.cpp tombstones.h
+	$(CC) -o tests.o  tests.cpp
+	
 clean:
 	rm *.o tests
