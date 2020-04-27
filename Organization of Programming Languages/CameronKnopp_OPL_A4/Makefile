@@ -1,9 +1,10 @@
 CC = clang++ -std=c++17
 
-all: tests
+tests: tests.o
+	$(CC) tests.o -o $@
 
-tests: tests.cpp tombstones.h
-	$(CC) -o tests.o  tests.cpp
-	
+tests.o: tests.cpp 
+	$(CC) -c tests.cpp 
+
 clean:
 	rm *.o tests

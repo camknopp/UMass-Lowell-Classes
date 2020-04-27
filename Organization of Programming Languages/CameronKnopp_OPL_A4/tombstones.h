@@ -21,7 +21,6 @@ struct Tomb
     {
         content = NULL;
         ref_cnt = 0;
-        used = false;
     }
 };
 
@@ -45,7 +44,7 @@ public:
     Pointer<T>()
     {
         ptr = new Tomb<T>();
-        ptr->used = true;
+        ptr->used = false;
     }                         // default constructor
     Pointer<T>(Pointer<T> &p) // copy constructor
     {
@@ -80,11 +79,14 @@ public:
     ~Pointer<T>() // destructor
     {
         ptr->ref_cnt--;
-        if (ptr->used || ptr->ref_cnt == 0)
+        if (ptr->used && ptr->ref_cnt == 0)
         {
             mem_leak();
         }
-        ptr = NULL;
+        else
+        {
+            ptr = NULL;
+        }
     }
     T &operator*() const // dereferencing
     {
@@ -140,7 +142,7 @@ public:
         else
         {
             delete p.ptr->content;
-            p.ptr->used = false
+            p.ptr->used = false;
         }
     }
     // This is essentially the inverse of the new inside the call to
@@ -176,9 +178,9 @@ public:
         return false;
     }
     // true iff Pointer is null and int is zero
-    bool operator!=(const int) const
+    bool operator!=(const int x) const
     {
-         if (ptr->content == NULL && x == 0)
+        if (ptr->content == NULL && x == 0)
             return false;
         return true;
     }
