@@ -11,9 +11,9 @@
 Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
 
 // WiFi/MQTT parameters
-#define WLAN_SSID "KNOPPNET_5GHZ"
-#define WLAN_PASS "AAAAABBBBBCCCCCDDDDDEEEEEF"
-#define BROKER_IP "10.0.0.179"
+#define WLAN_SSID ""
+#define WLAN_PASS ""
+#define BROKER_IP ""
 
 // initialize MQTT client
 WiFiClient client;
