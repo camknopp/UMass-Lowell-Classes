@@ -15,7 +15,6 @@ struct Tomb
     {
         content = NULL;
         ref_cnt = 0;
-        used = true;
     }
     ~Tomb()
     {
@@ -23,18 +22,6 @@ struct Tomb
         ref_cnt = 0;
     }
 };
-
-void mem_leak()
-{
-    std::cout << "Memory leak exception" << std::endl;
-    exit(1);
-}
-
-void dangling_ref()
-{
-    std::cout << "Dangling reference exception" << std::endl;
-    exit(1);
-}
 
 template <class T>
 class Pointer
@@ -58,14 +45,15 @@ public:
         }
         else
         {
-            dangling_ref();
+            std::cout << "Dangling reference exception" << std::endl;
+            exit(1);
         }
     }
     Pointer<T>(T *t) // bootstrapping constructor
     {
         ptr = new Tomb<T>();
-        ptr->content = t;
         ptr->used = true;
+        ptr->content = t;
         if (ptr->content == NULL)
         {
             ptr->ref_cnt = 0;
@@ -81,7 +69,8 @@ public:
         ptr->ref_cnt--;
         if (ptr->used && ptr->ref_cnt == 0)
         {
-            mem_leak();
+            std::cout << "Memory leak exception" << std::endl;
+            exit(1);
         }
         else
         {
@@ -92,11 +81,13 @@ public:
     {
         if (!ptr->used)
         {
-            dangling_ref();
+            std::cout << "Dangling reference exception" << std::endl;
+            exit(1);
         }
         else if (ptr->ref_cnt == 0)
         {
-            mem_leak();
+            std::cout << "Memory leak exception" << std::endl;
+            exit(1);
         }
         else
         {
@@ -107,11 +98,13 @@ public:
     {
         if (!ptr->used)
         {
-            dangling_ref();
+            std::cout << "Dangling reference exception" << std::endl;
+            exit(1);
         }
         else if (ptr->ref_cnt == 0)
         {
-            mem_leak();
+            std::cout << "Memory leak exception" << std::endl;
+            exit(1);
         }
         else
         {
@@ -123,26 +116,31 @@ public:
         ptr->ref_cnt--;
         if (ptr->ref_cnt == 0)
         {
-            mem_leak();
+            std::cout << "Memory leak exception" << std::endl;
+            exit(1);
         }
         ptr = p.ptr;
         ptr->ref_cnt++;
+        
+
         if (!ptr->used)
         {
-            dangling_ref();
+            std::cout << "Dangling reference exception" << std::endl;
+            exit(1);
         }
         return *this;
     }
     friend void free(Pointer<T> &p) // delete pointed-at object
     {
-        if (!p.ptr->used)
-        {
-            dangling_ref();
-        }
-        else
+        if (p.ptr->used)
         {
             delete p.ptr->content;
             p.ptr->used = false;
+        }
+        else
+        {
+            std::cout << "Dangling reference exception" << std::endl;
+            exit(1);
         }
     }
     // This is essentially the inverse of the new inside the call to
@@ -153,22 +151,24 @@ public:
     {
         if (!ptr->used || !p.ptr->used)
         {
-            dangling_ref();
+            std::cout << "Dangling reference exception" << std::endl;
+            exit(1);
         }
         else
         {
-            return ptr->content == p.ptr->content;
+            return p.ptr->content == ptr->content;
         }
     }
     bool operator!=(const Pointer<T> &p) const
     {
         if (!ptr->used || !p.ptr->used)
         {
-            dangling_ref();
+            std::cout << "Dangling reference exception" << std::endl;
+            exit(1);
         }
         else
         {
-            return ptr->content != p.ptr->content;
+            return p.ptr->content != ptr->content;
         }
     }
     bool operator==(const int x) const
