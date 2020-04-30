@@ -11,9 +11,9 @@
 Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
 
 // WiFi/MQTT parameters
-#define WLAN_SSID "KNOPPNET_5GHZ"
-#define WLAN_PASS "AAAAABBBBBCCCCCDDDDDEEEEEF"
-#define BROKER_IP "10.0.0.179"
+#define WLAN_SSID ""
+#define WLAN_PASS ""
+#define BROKER_IP ""
 
 // initialize MQTT client
 WiFiClient client;
@@ -97,7 +97,7 @@ void callback(char *topic, byte *payload, unsigned int length)
         matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
         matrix.setTextSize(1);
         matrix.setTextColor(LED_GREEN);
-        for (int8_t x = 7; x >= -36; x--)
+        for (int8_t x = 7; x >= -45; x--)
         {
             matrix.clear();
             matrix.setCursor(x, 0);
@@ -119,7 +119,7 @@ void callback(char *topic, byte *payload, unsigned int length)
         matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
         matrix.setTextSize(1);
         matrix.setTextColor(LED_RED);
-        for (int8_t x = 7; x >= -36; x--)
+        for (int8_t x = 7; x >= -55; x--)
         {
             matrix.clear();
             matrix.setCursor(x, 0);
@@ -136,7 +136,7 @@ void callback(char *topic, byte *payload, unsigned int length)
         matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
         matrix.setTextSize(1);
         matrix.setTextColor(LED_RED);
-        for (int8_t x = 7; x >= -36; x--)
+        for (int8_t x = 7; x >= -45; x--)
         {
             matrix.clear();
             matrix.setCursor(x, 0);

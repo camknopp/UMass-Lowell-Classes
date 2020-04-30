@@ -6,7 +6,7 @@ import time
 import random
 import paho.mqtt.client as mqtt
 
-broker_address= "10.0.0.179" #broker address (your pis ip address)
+broker_address= "" #broker address (your pis ip address)
 
 client = mqtt.Client() #create new mqtt client instance
 
