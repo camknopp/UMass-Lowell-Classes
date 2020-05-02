@@ -17,6 +17,8 @@ ROW_SPACING = 50
 LEFT_MARGIN = 250
 TOP_MARGIN = 750
 EGGSHELL = (240, 234, 214)  # used for the screen's background color
+RED = (255, 0, 0)
+YELLOW = (255, 255, 0)
 MINIMAX_AI = 2
 NON_MINIMAX_AI = 1
 EXPECTIMAX_AI = 2
@@ -49,24 +51,28 @@ def winning_move(board, piece):
     for col in range(COLUMN_COUNT-3):
         for row in range(ROW_COUNT):
             if board[row][col] == piece and board[row][col+1] == piece and board[row][col+2] == piece and board[row][col+3] == piece:
-                return True
+                win_coords = [(row,col), (row, col+1), (row, col+2), (row, col+3)]
+                return True, win_coords
 
     # check for vertical win
     for col in range(COLUMN_COUNT):
         for row in range(ROW_COUNT-3):
             if board[row][col] == piece and board[row+1][col] == piece and board[row+2][col] == piece and board[row+3][col] == piece:
-                return True
+                win_coords = [(row,col), (row+1,col), (row+2, col), (row+3, col)]
+                return True, win_coords
 
     # check for positively-sloped diagonal win
     for col in range(COLUMN_COUNT-3):
         for row in range(ROW_COUNT-3):
             if board[row][col] == piece and board[row+1][col+1] == piece and board[row+2][col+2] == piece and board[row+3][col+3] == piece:
-                return True
+                win_coords = [(row,col), (row+1,col+1), (row+2, col+2), (row+3, col+3)]
+                return True, win_coords
 
     for col in range(COLUMN_COUNT-3):
         for row in range(3, ROW_COUNT):
             if board[row][col] == piece and board[row-1][col+1] == piece and board[row-2][col+2] == piece and board[row-3][col+3] == piece:
-                return True
+                win_coords = [(row,col), (row-1,col+1), (row-2, col+2), (row-3, col+3)]
+                return True, win_coords
 
 
 def evaluate(board, player):
@@ -87,11 +93,7 @@ def evaluate(board, player):
         score += fitness(board, [row,col], player)
 
     return score
-
     
-
-
-
     
 def minimax(board, depth, alpha, beta, maximizingPlayer):
     # performs minimax algorithm to find best move
@@ -100,9 +102,9 @@ def minimax(board, depth, alpha, beta, maximizingPlayer):
     # check for terminal node or depth=0
     if depth == 0:
         return (0, evaluate(board, MINIMAX_AI))
-    elif winning_move(board, MINIMAX_AI):
+    elif winning_move(board, MINIMAX_AI)[0]:
         return (0, math.inf)
-    elif winning_move(board, NON_MINIMAX_AI):
+    elif winning_move(board, NON_MINIMAX_AI)[0]:
         return (0, -math.inf)
     elif len(get_valid_locations(board)) == 0:
         return (0, 0)
@@ -146,9 +148,9 @@ def expectimax(board, depth, maximizingPlayer):
     # check for terminal node or depth=0
     if depth == 0:
         return (None, evaluate(board, EXPECTIMAX_AI))
-    elif winning_move(board, EXPECTIMAX_AI):
+    elif winning_move(board, EXPECTIMAX_AI)[0]:
         return (0, math.inf)
-    elif winning_move(board, NON_EXPECTIMAX_AI):
+    elif winning_move(board, NON_EXPECTIMAX_AI)[0]:
         return (0, -math.inf)
     elif len(get_valid_locations(board)) == 0:
         return (0,0)
@@ -348,18 +350,18 @@ def pso_fitness(board, pos, piece):
     board_copy = board.copy()
     drop_piece(board_copy, col, piece)
 
-    if winning_move(board_copy, piece):
+    if winning_move(board_copy, piece)[0]:
         return math.inf
     else:
         if get_next_open_row(board_copy, col) is not None:
             drop_piece(board_copy, col, opponent)
-            if winning_move(board_copy, opponent):
+            if winning_move(board_copy, opponent)[0]:
                 return -math.inf# dropping this piece will set the opponent up for a win, which we don't want
 
     # check whether this position will stop the opponent from winning
     board_copy = board.copy()
     drop_piece(board_copy, col, opponent)
-    if winning_move(board_copy, opponent):
+    if winning_move(board_copy, opponent)[0]:
         return math.inf
   
     # get the lower and upper bounds for the columns for a 4-in-a-row horizontal win from curr position
@@ -518,7 +520,7 @@ def PSO(board, piece):
 def draw_piece(screen, row, col, piece):
     
     if piece == 1:
-        color = (255, 0, 0)
+        color = RED
         if piece == EXPECTIMAX_AI:
             name = 'Expectimax'
         elif piece == MINIMAX_AI:
@@ -526,7 +528,7 @@ def draw_piece(screen, row, col, piece):
         else:
             name = 'PSO'
     else:
-        color = (255, 255, 0)
+        color = YELLOW
         if piece == EXPECTIMAX_AI:
             name = 'Expectimax'
         elif piece == MINIMAX_AI:
@@ -550,8 +552,6 @@ def draw_piece(screen, row, col, piece):
     x = col * COLUMN_SPACING + LEFT_MARGIN
     y = TOP_MARGIN - row * ROW_SPACING
     pygame.display.update(pygame.draw.circle(screen, color, (x, y), 10, 0))
-    
-
 
 
 def draw_board(board, screen):
@@ -573,6 +573,20 @@ def draw_board(board, screen):
         screen.blit(num, (x, y))
 
     pygame.display.update()
+
+
+def flash_win(screen, win_coords, color):
+
+    for i in range(12):
+        for coord in win_coords:
+            x = coord[1] * COLUMN_SPACING + LEFT_MARGIN
+            y = TOP_MARGIN - row * ROW_SPACING
+
+            if i % 2 == 0:
+                pygame.draw.circle(screen, EGGSHELL, (x,y), 10, 3)
+            else:
+                pygame.draw.circle(screen, color, (x,y), 10, 3)
+        
 
 
 def draw_menu(screen):
@@ -601,6 +615,7 @@ def draw_menu(screen):
                     pass
 
         pygame.display.update()
+
 
 
 def display_wins(screen, player_one_wins, player_two_wins, ties, names):
@@ -713,12 +728,11 @@ def run_game_with_graphics():
                         row = get_next_open_row(board, col)
                         drop_piece(board, col, 1)
                         draw_piece(screen, row, col, 1)
-
-                        if winning_move(board, 1):
+                        win, win_coords = winning_move(board,1)
+                        if win:
                             print_board(board)
-                            print("PSO wins!")
+                            flash_win(screen, win_coords, RED)
                             player1_wins += 1
-                            print("total pso wins: {}".format(player1_wins))
                             game_over = True
                             break
 
@@ -747,13 +761,10 @@ def run_game_with_graphics():
                         drop_piece(board, col, 2)
                         draw_piece(screen, row, col, 2)
 
-                        if winning_move(board, 2):
-                            print_board(board)
-                            print("minimax wins!")
+                        win, win_coords = winning_move(board, 2)
+                        if win:
+                            flash_win(screen, win_coords, YELLOW)
                             player2_wins += 1
-                            print("total minimax wins: {}".format(
-                                player2_wins))
-
                             game_over = True
                             break
             print("-----------")
