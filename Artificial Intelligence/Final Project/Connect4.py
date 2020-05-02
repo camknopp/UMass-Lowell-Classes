@@ -516,6 +516,32 @@ def PSO(board, piece):
 
 
 def draw_piece(screen, row, col, piece):
+    
+    if piece == 1:
+        color = (255, 0, 0)
+        if piece == EXPECTIMAX_AI:
+            name = 'Expectimax'
+        elif piece == MINIMAX_AI:
+            name = 'Minimax'
+        else:
+            name = 'PSO'
+    else:
+        color = (255, 255, 0)
+        if piece == EXPECTIMAX_AI:
+            name = 'Expectimax'
+        elif piece == MINIMAX_AI:
+            name = 'Minimax'
+        else:
+            name = 'PSO'
+    message = "{} chooses column {}".format(name, col+1)
+
+    font = pygame.font.SysFont('Comic Sans MS', 35)
+    pygame.draw.rect(screen,EGGSHELL,(250,250,400,100))
+    num = font.render(message, True, color)    
+    screen.blit(num, (250, 300))
+
+    
+
     if piece == 1:
         color = (255, 0, 0)
     else:
@@ -524,9 +550,13 @@ def draw_piece(screen, row, col, piece):
     x = col * COLUMN_SPACING + LEFT_MARGIN
     y = TOP_MARGIN - row * ROW_SPACING
     pygame.display.update(pygame.draw.circle(screen, color, (x, y), 10, 0))
+    
+
 
 
 def draw_board(board, screen):
+    font = pygame.font.SysFont('Comic Sans MS', 25)
+
     for row in range(ROW_COUNT):
         # Loop for each column
         for column in range(COLUMN_COUNT):
@@ -535,6 +565,13 @@ def draw_board(board, screen):
             y = TOP_MARGIN - row * ROW_SPACING
 
             pygame.draw.circle(screen, (255, 255, 255), (x, y), 10, 3)
+
+    for col in range(COLUMN_COUNT):
+        x = col * (COLUMN_SPACING) + LEFT_MARGIN-3
+        y = TOP_MARGIN - ROW_COUNT * ROW_SPACING
+        num = font.render(str(col+1), True, (0, 0, 0))
+        screen.blit(num, (x, y))
+
     pygame.display.update()
 
 
