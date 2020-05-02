@@ -224,7 +224,6 @@ def fitness(board, pos, piece):
     neg_diag_score = 0
     extra_points = 0
 
-
     # get the lower and upper bounds for the columns for a 4-in-a-row horizontal win from curr position
     lower_col = col - 3
     if lower_col < 0:
@@ -575,17 +574,61 @@ def display_wins(screen, player_one_wins, player_two_wins, ties, names):
 
     p2_wins = font.render(
         names[1] + ": "+str(player_two_wins), True, (0, 0, 0))
-    screen.blit(p2_wins, (150, 0))
+    screen.blit(p2_wins, (300, 0))
 
     ties = font.render("Ties: "+str(ties), True, (0, 0, 0))
-    screen.blit(ties, (350, 0))
+    screen.blit(ties, (600, 0))
 
 
 def run_game_with_graphics():
     player1_wins = 0
     player2_wins = 0
     tie_games = 0
-    names = ['PSO (red)', 'Minimax(yellow)']
+    first_AI = None
+    second_AI = None
+    names = list()
+    global MINIMAX_AI
+    global NON_MINIMAX_AI
+    global EXPECTIMAX_AI
+    global NON_EXPECTIMAX_AI
+
+    while first_AI != 1 and first_AI != 2 and first_AI != 3:
+        first_AI = int(input("Please enter a number to indicate your first AI choice: \n(1) Minimax w/ alpha beta pruning \
+            \n(2) Expectimax \n(3) Particle Swarm Optimization"))
+    
+    if first_AI == 1:
+        print("first ai choice is minimax")
+        names.append('Minimax (Red)')
+        MINIMAX_AI = 1
+        NON_MINIMAX_AI = 2
+    elif first_AI == 2:
+        print("first ai choice is expecti")
+        names.append('Expectimax (Red)')
+        EXPECTIMAX_AI = 1
+        NON_EXPECTIMAX_AI = 2
+    else:
+        print("first ai choice is PSO")
+        names.append('PSO (Red)')
+    
+    while second_AI != 1 and second_AI != 2 and second_AI != 3 or second_AI == first_AI:
+        second_AI = int(input("Please enter a different number to indicate your second AI choice: \n(1) Minimax w/ alpha beta pruning \
+            \n(2) Expectimax \n(3) Particle Swarm Optimization\n"))
+
+    if second_AI == 1:
+        print("second ai choice is minimax")
+        names.append('Minimax (Yellow)')
+        MINIMAX_AI = 2
+        NON_MINIMAX_AI = 1
+    elif second_AI == 2:
+        print("second ai choice is expecti")
+        names.append('Expectimax (Yellow)')
+        EXPECTIMAX_AI = 2
+        NON_EXPECTIMAX_AI = 1
+    else:
+        print("second ai choice is PSO")
+        names.append('PSO (Yellow)')
+
+    print("names: {}".format(names))
 
     # Open the window and set the background
     pygame.init()
@@ -621,8 +664,13 @@ def run_game_with_graphics():
 
                     turn_num += 1
                 else:
-                    col = PSO(board, 1)[1]
-                    print("PSO chooses column {}".format(col))
+                    if first_AI == 1:
+                        col = minimax(board, 6, -math.inf, math.inf, True)[0]
+                    elif first_AI == 2:
+                        col = expectimax(board, 4, True)[0]
+                    else:
+                        col = PSO(board, 1)[1]
+                    print("P1 chooses column {}".format(col))
 
                     if is_valid_location(board, col):
                         row = get_next_open_row(board, col)
@@ -648,8 +696,14 @@ def run_game_with_graphics():
 
                     turn_num += 1
                 else:
-                    col = minimax(board, 6, -math.inf, math.inf, True)[0]
-                    print("minimax chooses column {}".format(col))
+                    if second_AI == 1:
+                        col = minimax(board, 6, -math.inf, math.inf, True)[0]
+                    elif second_AI == 2:
+                        col = expectimax(board, 4, True)[0]
+                    else:
+                        col = PSO(board, 1)[1]
+
+                    print("P2 chooses column {}".format(col))
 
                     if is_valid_location(board, col):
                         row = get_next_open_row(board, col)
