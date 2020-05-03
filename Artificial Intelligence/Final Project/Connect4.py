@@ -23,6 +23,7 @@ MINIMAX_AI = 2
 NON_MINIMAX_AI = 1
 EXPECTIMAX_AI = 2
 NON_EXPECTIMAX_AI = 1
+names = list()
 
 
 def create_board():
@@ -73,6 +74,7 @@ def winning_move(board, piece):
             if board[row][col] == piece and board[row-1][col+1] == piece and board[row-2][col+2] == piece and board[row-3][col+3] == piece:
                 win_coords = [(row,col), (row-1,col+1), (row-2, col+2), (row-3, col+3)]
                 return True, win_coords
+    return False, []
 
 
 def evaluate(board, player):
@@ -93,7 +95,7 @@ def evaluate(board, player):
         score += fitness(board, [row,col], player)
 
     return score
-    
+
     
 def minimax(board, depth, alpha, beta, maximizingPlayer):
     # performs minimax algorithm to find best move
@@ -518,31 +520,20 @@ def PSO(board, piece):
 
 
 def draw_piece(screen, row, col, piece):
-    
+    global names # this contains the names of the AI in the current game
+
     if piece == 1:
         color = RED
-        if piece == EXPECTIMAX_AI:
-            name = 'Expectimax'
-        elif piece == MINIMAX_AI:
-            name = 'Minimax'
-        else:
-            name = 'PSO'
+        name = names[0]
     else:
         color = YELLOW
-        if piece == EXPECTIMAX_AI:
-            name = 'Expectimax'
-        elif piece == MINIMAX_AI:
-            name = 'Minimax'
-        else:
-            name = 'PSO'
+        name = names[1]
     message = "{} chooses column {}".format(name, col+1)
 
     font = pygame.font.SysFont('Comic Sans MS', 35)
     pygame.draw.rect(screen,EGGSHELL,(250,250,400,100))
     num = font.render(message, True, color)    
     screen.blit(num, (250, 300))
-
-    
 
     if piece == 1:
         color = (255, 0, 0)
@@ -551,6 +542,7 @@ def draw_piece(screen, row, col, piece):
 
     x = col * COLUMN_SPACING + LEFT_MARGIN
     y = TOP_MARGIN - row * ROW_SPACING
+    print("drawing piece at row {} and col {}".format(row,col))
     pygame.display.update(pygame.draw.circle(screen, color, (x, y), 10, 0))
 
 
@@ -576,16 +568,24 @@ def draw_board(board, screen):
 
 
 def flash_win(screen, win_coords, color):
+    """
+    Make the winning 4-in-a-row flash on the board
+    """
 
     for i in range(12):
+        # for each iteration
+        print("iteration {}".format(i))
         for coord in win_coords:
             x = coord[1] * COLUMN_SPACING + LEFT_MARGIN
-            y = TOP_MARGIN - row * ROW_SPACING
+            y = TOP_MARGIN - coord[0] * ROW_SPACING
 
             if i % 2 == 0:
                 pygame.draw.circle(screen, EGGSHELL, (x,y), 10, 3)
             else:
                 pygame.draw.circle(screen, color, (x,y), 10, 3)
+        pygame.display.update()
+        time.sleep(.5)
+
         
 
 
@@ -638,15 +638,15 @@ def run_game_with_graphics():
     tie_games = 0
     first_AI = None
     second_AI = None
-    names = list()
+    global names
     global MINIMAX_AI
     global NON_MINIMAX_AI
     global EXPECTIMAX_AI
     global NON_EXPECTIMAX_AI
 
-    while first_AI != 1 and first_AI != 2 and first_AI != 3:
+    while first_AI != 1 and first_AI != 2 and first_AI != 3 and first_AI != 4:
         first_AI = int(input("Please enter a number to indicate your first AI choice: \n(1) Minimax w/ alpha beta pruning \
-            \n(2) Expectimax \n(3) Particle Swarm Optimization"))
+            \n(2) Expectimax \n(3) Particle Swarm Optimization \n(4) Random\n"))
     
     if first_AI == 1:
         print("first ai choice is minimax")
@@ -655,30 +655,36 @@ def run_game_with_graphics():
         NON_MINIMAX_AI = 2
     elif first_AI == 2:
         print("first ai choice is expecti")
-        names.append('Expectimax (Red)')
+        names.append('Expectimax')
         EXPECTIMAX_AI = 1
         NON_EXPECTIMAX_AI = 2
-    else:
+    elif first_AI == 3:
         print("first ai choice is PSO")
-        names.append('PSO (Red)')
+        names.append('PSO')
+    else:
+        print("first ai choice is random")
+        names.append('Random')
     
-    while second_AI != 1 and second_AI != 2 and second_AI != 3 or second_AI == first_AI:
+    while second_AI != 1 and second_AI != 2 and second_AI != 3 and second_AI != 4 or second_AI == first_AI:
         second_AI = int(input("Please enter a different number to indicate your second AI choice: \n(1) Minimax w/ alpha beta pruning \
-            \n(2) Expectimax \n(3) Particle Swarm Optimization\n"))
+            \n(2) Expectimax \n(3) Particle Swarm Optimization \n(4) Random\n"))
 
     if second_AI == 1:
         print("second ai choice is minimax")
-        names.append('Minimax (Yellow)')
+        names.append('Minimax')
         MINIMAX_AI = 2
         NON_MINIMAX_AI = 1
     elif second_AI == 2:
         print("second ai choice is expecti")
-        names.append('Expectimax (Yellow)')
+        names.append('Expectimax')
         EXPECTIMAX_AI = 2
         NON_EXPECTIMAX_AI = 1
-    else:
+    elif second_AI == 3:
         print("second ai choice is PSO")
-        names.append('PSO (Yellow)')
+        names.append('PSO')
+    else:
+        print("second ai choice is random")
+        names.append('Random')
 
     print("names: {}".format(names))
 
@@ -716,12 +722,15 @@ def run_game_with_graphics():
 
                     turn_num += 1
                 else:
-                    if first_AI == 1:
-                        col = minimax(board, 6, -math.inf, math.inf, True)[0]
-                    elif first_AI == 2:
-                        col = expectimax(board, 4, True)[0]
-                    else:
-                        col = PSO(board, 1)[1]
+                    # if first_AI == 1:
+                    #     col = minimax(board, 6, -math.inf, math.inf, True)[0]
+                    # elif first_AI == 2:
+                    #     col = expectimax(board, 4, True)[0]
+                    # elif first_AI == 3:
+                    #     col = PSO(board, 1)[1]
+                    # else:
+                    #     col = random.choice(get_valid_locations(board))
+                    col = 6
                     print("P1 chooses column {}".format(col))
 
                     if is_valid_location(board, col):
@@ -729,9 +738,11 @@ def run_game_with_graphics():
                         drop_piece(board, col, 1)
                         draw_piece(screen, row, col, 1)
                         win, win_coords = winning_move(board,1)
+
                         if win:
                             print_board(board)
-                            flash_win(screen, win_coords, RED)
+                            time.sleep(1)
+                            #flash_win(screen, win_coords, RED)
                             player1_wins += 1
                             game_over = True
                             break
@@ -747,12 +758,15 @@ def run_game_with_graphics():
 
                     turn_num += 1
                 else:
-                    if second_AI == 1:
-                        col = minimax(board, 6, -math.inf, math.inf, True)[0]
-                    elif second_AI == 2:
-                        col = expectimax(board, 4, True)[0]
-                    else:
-                        col = PSO(board, 1)[1]
+                    # if second_AI == 1:
+                    #     col = minimax(board, 6, -math.inf, math.inf, True)[0]
+                    # elif second_AI == 2:
+                    #     col = expectimax(board, 4, True)[0]
+                    # elif second_AI == 3:
+                    #     col = PSO(board, 1)[1]
+                    # else:
+                    #     col = random.choice(get_valid_locations(board))
+                    col = 1
 
                     print("P2 chooses column {}".format(col))
 
@@ -760,10 +774,11 @@ def run_game_with_graphics():
                         row = get_next_open_row(board, col)
                         drop_piece(board, col, 2)
                         draw_piece(screen, row, col, 2)
-
                         win, win_coords = winning_move(board, 2)
+
                         if win:
-                            flash_win(screen, win_coords, YELLOW)
+                            time.sleep(1)
+                            #flash_win(screen, win_coords, YELLOW)
                             player2_wins += 1
                             game_over = True
                             break
