@@ -6,7 +6,6 @@ import math
 import time
 import random
 import pygame
-from menu_option import Option
 
 #ROW_COUNT = 6
 #COLUMN_COUNT = 7
@@ -30,10 +29,12 @@ def create_board():
     board = np.zeros((ROW_COUNT, COLUMN_COUNT))
     return board
 
+
 def get_next_open_row(board, col):
     for r in range(ROW_COUNT):
         if board[r][col] == 0:
             return r
+
 
 def drop_piece(board, col, piece):
     row = get_next_open_row(board, col)
@@ -42,6 +43,7 @@ def drop_piece(board, col, piece):
 
 def is_valid_location(board, col):
     return board[ROW_COUNT - 1][col] == 0
+
 
 def print_board(board):
     print(np.flip(board, 0))
@@ -52,29 +54,25 @@ def winning_move(board, piece):
     for col in range(COLUMN_COUNT-3):
         for row in range(ROW_COUNT):
             if board[row][col] == piece and board[row][col+1] == piece and board[row][col+2] == piece and board[row][col+3] == piece:
-                win_coords = [(row,col), (row, col+1), (row, col+2), (row, col+3)]
-                return True, win_coords
+                return True
 
     # check for vertical win
     for col in range(COLUMN_COUNT):
         for row in range(ROW_COUNT-3):
             if board[row][col] == piece and board[row+1][col] == piece and board[row+2][col] == piece and board[row+3][col] == piece:
-                win_coords = [(row,col), (row+1,col), (row+2, col), (row+3, col)]
-                return True, win_coords
+                return True
 
     # check for positively-sloped diagonal win
     for col in range(COLUMN_COUNT-3):
         for row in range(ROW_COUNT-3):
             if board[row][col] == piece and board[row+1][col+1] == piece and board[row+2][col+2] == piece and board[row+3][col+3] == piece:
-                win_coords = [(row,col), (row+1,col+1), (row+2, col+2), (row+3, col+3)]
-                return True, win_coords
+                return True
 
     for col in range(COLUMN_COUNT-3):
         for row in range(3, ROW_COUNT):
             if board[row][col] == piece and board[row-1][col+1] == piece and board[row-2][col+2] == piece and board[row-3][col+3] == piece:
-                win_coords = [(row,col), (row-1,col+1), (row-2, col+2), (row-3, col+3)]
-                return True, win_coords
-    return False, []
+                return True
+    return False
 
 
 def evaluate(board, player):
@@ -92,11 +90,11 @@ def evaluate(board, player):
 
     for col in valid:
         row = get_next_open_row(board, col)
-        score += fitness(board, [row,col], player)
+        score += fitness(board, [row, col], player)
 
     return score
 
-    
+
 def minimax(board, depth, alpha, beta, maximizingPlayer):
     # performs minimax algorithm to find best move
     # code based upon pseudocode found here https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning#Pseudocode
@@ -104,13 +102,12 @@ def minimax(board, depth, alpha, beta, maximizingPlayer):
     # check for terminal node or depth=0
     if depth == 0:
         return (0, evaluate(board, MINIMAX_AI))
-    elif winning_move(board, MINIMAX_AI)[0]:
+    elif winning_move(board, MINIMAX_AI):
         return (0, 100000)
-    elif winning_move(board, NON_MINIMAX_AI)[0]:
+    elif winning_move(board, NON_MINIMAX_AI):
         return (0, -100000)
     elif len(get_valid_locations(board)) == 0:
         return (0, 0)
-    
 
     if maximizingPlayer:
         value = -math.inf
@@ -150,12 +147,12 @@ def expectimax(board, depth, maximizingPlayer):
     # check for terminal node or depth=0
     if depth == 0:
         return (0, evaluate(board, EXPECTIMAX_AI))
-    elif winning_move(board, EXPECTIMAX_AI)[0]:
+    elif winning_move(board, EXPECTIMAX_AI):
         return (0, 100000)
-    elif winning_move(board, NON_EXPECTIMAX_AI)[0]:
+    elif winning_move(board, NON_EXPECTIMAX_AI):
         return (0, -100000)
     elif len(get_valid_locations(board)) == 0:
-        return (0,0)
+        return (0, 0)
 
     if maximizingPlayer:
         value = -math.inf
@@ -220,7 +217,7 @@ def fitness(board, pos, piece):
 
     opponent = 2
     if piece == 2:
-        opponent = 1 
+        opponent = 1
 
     horizontal_score = 0
     vertical_score = 0
@@ -242,12 +239,12 @@ def fitness(board, pos, piece):
     # add +1 to horizontal_score for every horiz. 4-in-a-row that can potentially happen from given pos
     while curr_col <= col and curr_col+3 <= upper_col:
         if board[row][curr_col] != opponent and board[row][curr_col+1] != opponent and board[row][curr_col+2] != opponent and board[row][curr_col+3] != opponent:
-            horizontal_score+=1
-        curr_col+=1
+            horizontal_score += 1
+        curr_col += 1
 
     if col+1 < COLUMN_COUNT and col-1 >= 0:
         if board[row][col+1] == opponent and board[row][col-1] == opponent:
-            extra_points+=10 # give extra points for this position because it prevents the opponent from getting 3 in a row horizontally
+            extra_points += 10  # give extra points for this position because it prevents the opponent from getting 3 in a row horizontally
 
     # get the lower and upper bounds for rows for a 4-in-a-row vertical win from curr position
     lower_row = row - 3
@@ -262,8 +259,8 @@ def fitness(board, pos, piece):
     curr_row = lower_row
     while curr_row <= row and curr_row+3 <= upper_row:
         if board[curr_row][col] != opponent and board[curr_row+1][col] != opponent and board[curr_row+2][col] != opponent and board[curr_row+3][col] != opponent:
-            vertical_score+=1
-        curr_row+=1
+            vertical_score += 1
+        curr_row += 1
 
     # reset these values
     curr_col = col
@@ -272,13 +269,13 @@ def fitness(board, pos, piece):
     # now need to determine the upper_row and upper_col values for use in scoring the negatively-sloped diagonals
     done = False
     while not done:
-        curr_col+=1
-        curr_row+=1
+        curr_col += 1
+        curr_row += 1
         if curr_col > COLUMN_COUNT-1 or curr_row > ROW_COUNT-1 or curr_col == col+4:
             upper_row = curr_row-1
             upper_col = curr_col-1
-            done=True
-    
+            done = True
+
     curr_row = upper_row
     curr_col = upper_col
 
@@ -286,10 +283,9 @@ def fitness(board, pos, piece):
     # traverse board right->left from upper right diagonal position
     while curr_row >= row and curr_row-3 >= 0 and curr_col >= col and curr_col-3 >= 0:
         if board[curr_row][curr_col] != opponent and board[curr_row-1][curr_col-1] != opponent and board[curr_row-2][curr_col-2] != opponent and board[curr_row-3][curr_col-3] != opponent:
-            pos_diag_score+=1
-        curr_row-=1
-        curr_col-=1
-
+            pos_diag_score += 1
+        curr_row -= 1
+        curr_col -= 1
 
     # reset these values
     curr_col = col
@@ -298,24 +294,25 @@ def fitness(board, pos, piece):
     # now we determine the lower_col and upper_row values which are used when scoring the postiively-sloped diagonals
     done = False
     while not done:
-        curr_col-=1
-        curr_row+=1
+        curr_col -= 1
+        curr_row += 1
         if curr_col < 0 or curr_row > ROW_COUNT-1 or curr_col == col-4:
             lower_col = curr_col+1
             upper_row = curr_row-1
-            done=True
+            done = True
 
     curr_col = lower_col
-    curr_row = upper_row # want to start at the highest row and move down, since we are looking for negative diagonals
-    
+    # want to start at the highest row and move down, since we are looking for negative diagonals
+    curr_row = upper_row
+
     # add +1 to neg_diag_score for every negatively-sloped 4-in-a-row that can potentially occur from given pos
     # traverse board left->right from upper left position
     while curr_row >= row and curr_row-3 >= 0 and curr_col <= col and curr_col+3 <= COLUMN_COUNT-1:
         #print("[x][y]==[{}][{}]".format(curr_col, curr_row))
         if board[curr_row][curr_col] != opponent and board[curr_row-1][curr_col+1] != opponent and board[curr_row-2][curr_col+2] != opponent and board[curr_row-3][curr_col+3] != opponent:
-            neg_diag_score+=1
-        curr_row-=1
-        curr_col+=1
+            neg_diag_score += 1
+        curr_row -= 1
+        curr_col += 1
 
     return horizontal_score + vertical_score + pos_diag_score + neg_diag_score + extra_points
 
@@ -339,33 +336,33 @@ def pso_fitness(board, pos, piece):
 
     opponent = 2
     if piece == 2:
-        opponent = 1 
-
+        opponent = 1
 
     horizontal_score = 0
     vertical_score = 0
     pos_diag_score = 0
     neg_diag_score = 0
-    extra_points = 0 
+    extra_points = 0
 
     # check whether placing a piece in this position will win the game
     board_copy = board.copy()
     drop_piece(board_copy, col, piece)
 
-    if winning_move(board_copy, piece)[0]:
+    if winning_move(board_copy, piece):
         return math.inf
     else:
         if get_next_open_row(board_copy, col) is not None:
             drop_piece(board_copy, col, opponent)
-            if winning_move(board_copy, opponent)[0]:
-                return -math.inf# dropping this piece will set the opponent up for a win, which we don't want
+            if winning_move(board_copy, opponent):
+                # dropping this piece will set the opponent up for a win, which we don't want
+                return -math.inf
 
     # check whether this position will stop the opponent from winning
     board_copy = board.copy()
     drop_piece(board_copy, col, opponent)
-    if winning_move(board_copy, opponent)[0]:
+    if winning_move(board_copy, opponent):
         return math.inf
-  
+
     # get the lower and upper bounds for the columns for a 4-in-a-row horizontal win from curr position
     lower_col = col - 3
     if lower_col < 0:
@@ -380,12 +377,12 @@ def pso_fitness(board, pos, piece):
     # add +1 to horizontal_score for every horiz. 4-in-a-row that can potentially happen from given pos
     while curr_col <= col and curr_col+3 <= upper_col:
         if board[row][curr_col] != opponent and board[row][curr_col+1] != opponent and board[row][curr_col+2] != opponent and board[row][curr_col+3] != opponent:
-            horizontal_score+=1
-        curr_col+=1
+            horizontal_score += 1
+        curr_col += 1
 
     if col+1 < COLUMN_COUNT and col-1 >= 0:
         if board[row][col+1] == opponent and board[row][col-1] == opponent:
-            extra_points+=10 # give extra points for this position because it prevents the opponent from getting 3 in a row horizontally
+            extra_points += 10  # give extra points for this position because it prevents the opponent from getting 3 in a row horizontally
 
     # get the lower and upper bounds for rows for a 4-in-a-row vertical win from curr position
     lower_row = row - 3
@@ -400,9 +397,8 @@ def pso_fitness(board, pos, piece):
     curr_row = lower_row
     while curr_row <= row and curr_row+3 <= upper_row:
         if board[curr_row][col] != opponent and board[curr_row+1][col] != opponent and board[curr_row+2][col] != opponent and board[curr_row+3][col] != opponent:
-            vertical_score+=1
-        curr_row+=1
-
+            vertical_score += 1
+        curr_row += 1
 
     # reset these values
     curr_col = col
@@ -411,13 +407,13 @@ def pso_fitness(board, pos, piece):
     # now need to determine the upper_row and upper_col values for use in scoring the negatively-sloped diagonals
     done = False
     while not done:
-        curr_col+=1
-        curr_row+=1
+        curr_col += 1
+        curr_row += 1
         if curr_col > COLUMN_COUNT-1 or curr_row > ROW_COUNT-1 or curr_col == col+4:
             upper_row = curr_row-1
             upper_col = curr_col-1
-            done=True
-    
+            done = True
+
     curr_row = upper_row
     curr_col = upper_col
 
@@ -425,10 +421,9 @@ def pso_fitness(board, pos, piece):
     # traverse board right->left from upper right diagonal position
     while curr_row >= row and curr_row-3 >= 0 and curr_col >= col and curr_col-3 >= 0:
         if board[curr_row][curr_col] != opponent and board[curr_row-1][curr_col-1] != opponent and board[curr_row-2][curr_col-2] != opponent and board[curr_row-3][curr_col-3] != opponent:
-            pos_diag_score+=1
-        curr_row-=1
-        curr_col-=1
-
+            pos_diag_score += 1
+        curr_row -= 1
+        curr_col -= 1
 
     # reset these values
     curr_col = col
@@ -437,33 +432,32 @@ def pso_fitness(board, pos, piece):
     # now we determine the lower_col and upper_row values which are used when scoring the postiively-sloped diagonals
     done = False
     while not done:
-        curr_col-=1
-        curr_row+=1
+        curr_col -= 1
+        curr_row += 1
         if curr_col < 0 or curr_row > ROW_COUNT-1 or curr_col == col-4:
             lower_col = curr_col+1
             upper_row = curr_row-1
-            done=True
+            done = True
 
     curr_col = lower_col
-    curr_row = upper_row # want to start at the highest row and move down, since we are looking for negative diagonals
-    
+    # want to start at the highest row and move down, since we are looking for negative diagonals
+    curr_row = upper_row
+
     # add +1 to neg_diag_score for every negatively-sloped 4-in-a-row that can potentially occur from given pos
     # traverse board left->right from upper left position
     while curr_row >= row and curr_row-3 >= 0 and curr_col <= col and curr_col+3 <= COLUMN_COUNT-1:
         #print("[x][y]==[{}][{}]".format(curr_col, curr_row))
         if board[curr_row][curr_col] != opponent and board[curr_row-1][curr_col+1] != opponent and board[curr_row-2][curr_col+2] != opponent and board[curr_row-3][curr_col+3] != opponent:
-            neg_diag_score+=1
-        curr_row-=1
-        curr_col+=1
+            neg_diag_score += 1
+        curr_row -= 1
+        curr_col += 1
 
     return horizontal_score + vertical_score + pos_diag_score + neg_diag_score + extra_points
-
-    
 
 
 def PSO(board, piece):
     # based around pseudocode found here https://en.wikipedia.org/wiki/Particle_swarm_optimization
-   
+
     c1 = 2
     c2 = 2
     r1 = np.random.random()
@@ -476,15 +470,15 @@ def PSO(board, piece):
     # initialize particle swarm
     for i in range(population_size):
         p_curr_coord = [random.choice(range(ROW_COUNT)),
-                   random.choice(range(COLUMN_COUNT))]
+                        random.choice(range(COLUMN_COUNT))]
         p_best_coord = [random.choice(range(ROW_COUNT)),
-                   random.choice(range(COLUMN_COUNT))]
+                        random.choice(range(COLUMN_COUNT))]
         p_veloc = [np.random.random(), np.random.random()]
 
         swarm.append([p_curr_coord, p_best_coord, p_veloc])
-    
-    gbest = swarm[0][0] # set gbest arbitrarily to the first particle's coordinates
 
+    # set gbest arbitrarily to the first particle's coordinates
+    gbest = swarm[0][0]
 
     for i in range(max_generation):
         for j in range(population_size):
@@ -492,7 +486,8 @@ def PSO(board, piece):
 
             # adjust the particle's current position using its velocity
             for k in range(2):
-                p[2][k] = math.floor(p[2][k] + c1 * np.random.random() * (p[1][k] - p[0][k]) + c2 * np.random.random() * (gbest[k] - p[0][k]))
+                p[2][k] = math.floor(p[2][k] + c1 * np.random.random() * (
+                    p[1][k] - p[0][k]) + c2 * np.random.random() * (gbest[k] - p[0][k]))
                 #print("p[2][{}]: {}".format(k, p[2][k]))
                 p[0][k] += p[2][k]
 
@@ -507,7 +502,6 @@ def PSO(board, piece):
             elif p[0][1] < 0:
                 p[0][1] = 0
 
-
             # check whether the particle's current position is it's best position thus far
             if pso_fitness(b_copy, p[0], piece) > pso_fitness(b_copy, p[1], piece):
                 p[1] = p[0].copy()
@@ -516,11 +510,11 @@ def PSO(board, piece):
                     gbest = p[1].copy()
             swarm[j] = p
 
-    return gbest # return the global best coordinate of the swarm
+    return gbest  # return the global best coordinate of the swarm
 
 
 def draw_piece(screen, row, col, piece):
-    global names # this contains the names of the AI in the current game
+    global names  # this contains the names of the AI in the current game
 
     if piece == 1:
         color = RED
@@ -531,8 +525,8 @@ def draw_piece(screen, row, col, piece):
     message = "{} chooses column {}".format(name, col+1)
 
     font = pygame.font.SysFont('Comic Sans MS', 35)
-    pygame.draw.rect(screen,EGGSHELL,(250,250,400,100))
-    num = font.render(message, True, color)    
+    pygame.draw.rect(screen, EGGSHELL, (250, 250, 400, 100))
+    num = font.render(message, True, color)
     screen.blit(num, (250, 300))
 
     if piece == 1:
@@ -542,7 +536,7 @@ def draw_piece(screen, row, col, piece):
 
     x = col * COLUMN_SPACING + LEFT_MARGIN
     y = TOP_MARGIN - row * ROW_SPACING
-    print("drawing piece at row {} and col {}".format(row,col))
+    print("drawing piece at row {} and col {}".format(row, col))
     pygame.display.update(pygame.draw.circle(screen, color, (x, y), 10, 0))
 
 
@@ -567,57 +561,6 @@ def draw_board(board, screen):
     pygame.display.update()
 
 
-def flash_win(screen, win_coords, color):
-    """
-    Make the winning 4-in-a-row flash on the board
-    """
-
-    for i in range(12):
-        # for each iteration
-        print("iteration {}".format(i))
-        for coord in win_coords:
-            x = coord[1] * COLUMN_SPACING + LEFT_MARGIN
-            y = TOP_MARGIN - coord[0] * ROW_SPACING
-
-            if i % 2 == 0:
-                pygame.draw.circle(screen, EGGSHELL, (x,y), 10, 3)
-            else:
-                pygame.draw.circle(screen, color, (x,y), 10, 3)
-        pygame.display.update()
-        time.sleep(.5)
-
-        
-
-
-def draw_menu(screen):
-    options = [Option("Start Game", (400, 350), screen), Option(
-        "Quit", (400, 600), screen), Option("<", (200, 475), screen), Option(">", (400, 475), screen)]
-    chosen_option = False
-
-    while chosen_option == False:
-        # for event in pygame.event.get():
-        pygame.event.pump()
-
-        for option in options:
-            if option.rect.collidepoint(pygame.mouse.get_pos()):
-                option.hovered = True
-            else:
-                option.hovered = False
-            option.draw()
-
-            for event in pygame.event.get():
-                if event.type == pygame.MOUSEBUTTONUP and option.hovered == True:
-                    chosen_option = True
-                    pygame.quit()
-                elif event.type == pygame.QUIT:
-                    pygame.quit()
-                else:
-                    pass
-
-        pygame.display.update()
-
-
-
 def display_wins(screen, player_one_wins, player_two_wins, ties, names):
     font = pygame.font.SysFont('Comic Sans MS', 25)
     p1_wins = font.render(
@@ -630,6 +573,23 @@ def display_wins(screen, player_one_wins, player_two_wins, ties, names):
 
     ties = font.render("Ties: "+str(ties), True, (0, 0, 0))
     screen.blit(ties, (600, 0))
+
+
+def display_win_message(screen, piece, col):
+    global names  # this contains the names of the AI in the current game
+
+    if piece == 1:
+        color = RED
+        name = names[0]
+    else:
+        color = YELLOW
+        name = names[1]
+    message = "{} wins by dropping piece in column {}".format(name, col+1)
+
+    font = pygame.font.SysFont('Comic Sans MS', 35)
+    pygame.draw.rect(screen, EGGSHELL, (250, 250, 400, 100))
+    num = font.render(message, True, color)
+    screen.blit(num, (250, 300))
 
 
 def run_game_with_graphics():
@@ -647,43 +607,35 @@ def run_game_with_graphics():
     while first_AI != 1 and first_AI != 2 and first_AI != 3 and first_AI != 4:
         first_AI = int(input("Please enter a number to indicate your first AI choice: \n(1) Minimax w/ alpha beta pruning \
             \n(2) Expectimax \n(3) Particle Swarm Optimization \n(4) Random\n"))
-    
+
     if first_AI == 1:
-        print("first ai choice is minimax")
         names.append('Minimax (Red)')
         MINIMAX_AI = 1
         NON_MINIMAX_AI = 2
     elif first_AI == 2:
-        print("first ai choice is expecti")
         names.append('Expectimax')
         EXPECTIMAX_AI = 1
         NON_EXPECTIMAX_AI = 2
     elif first_AI == 3:
-        print("first ai choice is PSO")
         names.append('PSO')
     else:
-        print("first ai choice is random")
         names.append('Random')
-    
+
     while second_AI != 1 and second_AI != 2 and second_AI != 3 and second_AI != 4 or second_AI == first_AI:
         second_AI = int(input("Please enter a different number to indicate your second AI choice: \n(1) Minimax w/ alpha beta pruning \
             \n(2) Expectimax \n(3) Particle Swarm Optimization \n(4) Random\n"))
 
     if second_AI == 1:
-        print("second ai choice is minimax")
         names.append('Minimax')
         MINIMAX_AI = 2
         NON_MINIMAX_AI = 1
     elif second_AI == 2:
-        print("second ai choice is expecti")
         names.append('Expectimax')
         EXPECTIMAX_AI = 2
         NON_EXPECTIMAX_AI = 1
     elif second_AI == 3:
-        print("second ai choice is PSO")
         names.append('PSO')
     else:
-        print("second ai choice is random")
         names.append('Random')
 
     print("names: {}".format(names))
@@ -693,7 +645,7 @@ def run_game_with_graphics():
     screen = pygame.display.set_mode((800, 800))
     screen.fill(EGGSHELL)
     last_turn = 1
-    #while player1_wins != 100 or player2_wins != 100:
+    # while player1_wins != 100 or player2_wins != 100:
     while player1_wins + player2_wins + tie_games < 100:
         board = create_board()
         game_over = False
@@ -705,12 +657,12 @@ def run_game_with_graphics():
         else:
             turn = 1
             last_turn = 1
-        
+
         screen.fill(EGGSHELL)
         display_wins(screen, player1_wins, player2_wins, tie_games, names)
         draw_board(board, screen)
 
-        while not game_over:
+        while True:
             col = None
             # Player's turn
             if len(get_valid_locations(board)) == 0:
@@ -737,22 +689,18 @@ def run_game_with_graphics():
                         col = PSO(board, 1)[1]
                     else:
                         col = random.choice(get_valid_locations(board))
-                    # col = 6
+
                     print("P1 chooses column {}".format(col))
 
                     if is_valid_location(board, col):
                         row = get_next_open_row(board, col)
                         drop_piece(board, col, 1)
                         draw_piece(screen, row, col, 1)
-                        win, win_coords = winning_move(board,1)
 
-                        if win:
-                            print_board(board)
-                            time.sleep(1)
-                            #flash_win(screen, win_coords, RED)
+                        if winning_move(board, 1):
                             player1_wins += 1
+                            display_win_message(screen, 1, col)
                             game_over = True
-                            break
 
             # ai's turn
             else:
@@ -773,7 +721,6 @@ def run_game_with_graphics():
                         col = PSO(board, 1)[1]
                     else:
                         col = random.choice(get_valid_locations(board))
-                    # col = 1
 
                     print("P2 chooses column {}".format(col))
 
@@ -781,117 +728,29 @@ def run_game_with_graphics():
                         row = get_next_open_row(board, col)
                         drop_piece(board, col, 2)
                         draw_piece(screen, row, col, 2)
-                        win, win_coords = winning_move(board, 2)
 
-                        if win:
-                            time.sleep(1)
-                            #flash_win(screen, win_coords, YELLOW)
+                        if winning_move(board, 2):
                             player2_wins += 1
+                            display_win_message(screen, 2, col)
                             game_over = True
-                            break
             print("-----------")
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
-
             time.sleep(.5)
             print_board(board)
+            if game_over:
+                time.sleep(3)
+                break
 
             turn = (turn+1) % 2
-
-        screen.fill(EGGSHELL)
-        draw_board(board, screen)
 
     print("{} wins: {}".format(names[0], player1_wins))
     print("{} wins: {}".format(names[1], player2_wins))
     print("Ties: {}".format(tie_games))
 
 
-def run_game_no_graphics():
-    player1_wins = 0
-    player2_wins = 0
-    tie_games = 0
-    
-    while player1_wins != 100 or player2_wins != 100:
-        board = create_board()
-        game_over = False
-        turn = random.choice([0, 1])
-        turn_num = 0
-
-        while not game_over:
-            col = None
-            # Player's turn
-            if len(get_valid_locations(board)) == 0:
-                game_over = True
-                print("Tie game")
-                tie_games += 1
-                break
-
-            if turn == 0:
-                if turn_num < 2:  # if first or second turn, then drop random piece in order to spice up the game
-                    col = random.choice(get_valid_locations(board))
-                    print("Randomly placing a chip...")
-                    drop_piece(board, col, 1)
-
-                    turn_num += 1
-                else:
-                    col = PSO(board, 1)[1]
-                    print("PSO chooses column {}".format(col))
-
-                    if is_valid_location(board, col):
-                        drop_piece(board, col, 1)
-
-                        if winning_move(board, 1):
-                            print_board(board)
-                            print("PSO wins!")
-                            player1_wins += 1
-                            print("total pso wins: {}".format(player1_wins))
-                            game_over = True
-                            break
-
-            # ai's turn
-            else:
-                if turn_num < 2:  # if first or second turn, then drop random piece in order to spice up the game
-                    col = random.choice(get_valid_locations(board))
-                    print("Randomly placing a chip...")
-                    drop_piece(board, col, 2)
-
-                    turn_num += 1
-                else:
-                    col = minimax(board, 5, -math.inf, math.inf, True)[0]
-                    print("minimax chooses column {}".format(col))
-
-                    if is_valid_location(board, col):
-                        row = get_next_open_row(board, col)
-                        drop_piece(board, col, 2)
-
-                        if winning_move(board, 2):
-                            print_board(board)
-                            print("minimax wins!")
-                            player2_wins += 1
-                            print("total minimax wins: {}".format(
-                                player2_wins))
-
-                            game_over = True
-                            break
-            print("-----------")
-
-            time.sleep(.5)
-            print_board(board)
-
-            turn = (turn+1) % 2
-
-    print("PSO wins: {}".format(minimax_wins))
-    print("MINIMAX wins: {}".format(player2_wins))
-
-
 if __name__ == '__main__':
 
-    
     run_game_with_graphics()
-
-
-
-
-    
