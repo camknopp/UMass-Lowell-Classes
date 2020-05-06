@@ -105,9 +105,9 @@ def minimax(board, depth, alpha, beta, maximizingPlayer):
     if depth == 0:
         return (0, evaluate(board, MINIMAX_AI))
     elif winning_move(board, MINIMAX_AI)[0]:
-        return (0, math.inf)
+        return (0, 100000)
     elif winning_move(board, NON_MINIMAX_AI)[0]:
-        return (0, -math.inf)
+        return (0, -100000)
     elif len(get_valid_locations(board)) == 0:
         return (0, 0)
     
@@ -115,7 +115,7 @@ def minimax(board, depth, alpha, beta, maximizingPlayer):
     if maximizingPlayer:
         value = -math.inf
         valid = get_valid_locations(board)
-        column = valid[0]
+        column = random.choice(valid)
         for col in valid:
             board_copy = board.copy()
             drop_piece(board_copy, col, MINIMAX_AI)
@@ -131,7 +131,7 @@ def minimax(board, depth, alpha, beta, maximizingPlayer):
     else:
         value = math.inf
         valid = get_valid_locations(board)
-        column = valid[0]
+        column = random.choice(valid)
         for col in valid:
             board_copy = board.copy()
             drop_piece(board_copy, col, NON_MINIMAX_AI)
@@ -149,18 +149,18 @@ def expectimax(board, depth, maximizingPlayer):
 
     # check for terminal node or depth=0
     if depth == 0:
-        return (None, evaluate(board, EXPECTIMAX_AI))
+        return (0, evaluate(board, EXPECTIMAX_AI))
     elif winning_move(board, EXPECTIMAX_AI)[0]:
-        return (0, math.inf)
+        return (0, 100000)
     elif winning_move(board, NON_EXPECTIMAX_AI)[0]:
-        return (0, -math.inf)
+        return (0, -100000)
     elif len(get_valid_locations(board)) == 0:
         return (0,0)
 
     if maximizingPlayer:
         value = -math.inf
         valid = get_valid_locations(board)
-        column = valid[0]
+        column = random.choice(valid)
         for col in valid:
             board_copy = board.copy()
             drop_piece(board_copy, col, EXPECTIMAX_AI)
@@ -173,7 +173,7 @@ def expectimax(board, depth, maximizingPlayer):
     else:
         value = math.inf
         valid = get_valid_locations(board)
-        column = valid[0]
+        column = random.choice(valid)
         nodes = []
         for col in valid:
             board_copy = board.copy()
@@ -692,13 +692,20 @@ def run_game_with_graphics():
     pygame.init()
     screen = pygame.display.set_mode((800, 800))
     screen.fill(EGGSHELL)
-    # draw_menu(screen)
-
-    while player1_wins != 100 or player2_wins != 100:
+    last_turn = 1
+    #while player1_wins != 100 or player2_wins != 100:
+    while player1_wins + player2_wins + tie_games < 100:
         board = create_board()
         game_over = False
-        turn = random.choice([0, 1])
         turn_num = 0
+        # do this so that it switches of which player starts each game
+        if last_turn == 1:
+            turn = 0
+            last_turn = 0
+        else:
+            turn = 1
+            last_turn = 1
+        
         screen.fill(EGGSHELL)
         display_wins(screen, player1_wins, player2_wins, tie_games, names)
         draw_board(board, screen)
@@ -722,15 +729,15 @@ def run_game_with_graphics():
 
                     turn_num += 1
                 else:
-                    # if first_AI == 1:
-                    #     col = minimax(board, 6, -math.inf, math.inf, True)[0]
-                    # elif first_AI == 2:
-                    #     col = expectimax(board, 4, True)[0]
-                    # elif first_AI == 3:
-                    #     col = PSO(board, 1)[1]
-                    # else:
-                    #     col = random.choice(get_valid_locations(board))
-                    col = 6
+                    if first_AI == 1:
+                        col = minimax(board, 6, -math.inf, math.inf, True)[0]
+                    elif first_AI == 2:
+                        col = expectimax(board, 4, True)[0]
+                    elif first_AI == 3:
+                        col = PSO(board, 1)[1]
+                    else:
+                        col = random.choice(get_valid_locations(board))
+                    # col = 6
                     print("P1 chooses column {}".format(col))
 
                     if is_valid_location(board, col):
@@ -758,15 +765,15 @@ def run_game_with_graphics():
 
                     turn_num += 1
                 else:
-                    # if second_AI == 1:
-                    #     col = minimax(board, 6, -math.inf, math.inf, True)[0]
-                    # elif second_AI == 2:
-                    #     col = expectimax(board, 4, True)[0]
-                    # elif second_AI == 3:
-                    #     col = PSO(board, 1)[1]
-                    # else:
-                    #     col = random.choice(get_valid_locations(board))
-                    col = 1
+                    if second_AI == 1:
+                        col = minimax(board, 6, -math.inf, math.inf, True)[0]
+                    elif second_AI == 2:
+                        col = expectimax(board, 4, True)[0]
+                    elif second_AI == 3:
+                        col = PSO(board, 1)[1]
+                    else:
+                        col = random.choice(get_valid_locations(board))
+                    # col = 1
 
                     print("P2 chooses column {}".format(col))
 
@@ -796,8 +803,9 @@ def run_game_with_graphics():
         screen.fill(EGGSHELL)
         draw_board(board, screen)
 
-    print("minimax wins: {}".format(minimax_wins))
-    print("expectimax wins: {}".format(player2_wins))
+    print("{} wins: {}".format(names[0], player1_wins))
+    print("{} wins: {}".format(names[1], player2_wins))
+    print("Ties: {}".format(tie_games))
 
 
 def run_game_no_graphics():
