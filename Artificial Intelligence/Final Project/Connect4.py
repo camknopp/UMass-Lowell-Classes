@@ -609,7 +609,7 @@ def run_game_with_graphics():
             \n(2) Expectimax \n(3) Particle Swarm Optimization \n(4) Random\n"))
 
     if first_AI == 1:
-        names.append('Minimax (Red)')
+        names.append('Minimax')
         MINIMAX_AI = 1
         NON_MINIMAX_AI = 2
     elif first_AI == 2:
