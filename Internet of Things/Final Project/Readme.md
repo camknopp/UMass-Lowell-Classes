@@ -1,1 +1,3 @@
-# Connect 4 using and ESP8266, MQTT, and an 8x8 Bi-color LED Matrix
+# Wireless Connect 4 with AI Opponents
+
+The following link is a video which I made that explains and demos this project: https://youtu.be/P447xZhtXsc
